@@ -12,11 +12,6 @@ export default tseslint.config(
     files: ['**/*.ts'],
     rules: {
       /**
-       * doesn't follow the new angular naming convention
-       * see https://angular.dev/style-guide#naming
-       */
-      '@angular-eslint/component-class-suffix': 'off',
-      /**
        * validatorFn requires to return ValidationErrors | null
        */
       'unicorn/no-null': 'off',

@@ -1,0 +1,30 @@
+<form
+  tuiAppearance="floating"
+  tuiCardLarge
+  tuiForm="l"
+  [style.max-width.rem]="24"
+  [style.align-items]="'stretch'"
+  [formGroup]="authForm"
+>
+  <header tuiHeader>
+    <h2 tuiTitle>Authentication</h2>
+  </header>
+  <tui-textfield>
+    <label for="name" tuiLabel>Name</label>
+    <input id="name" tuiTextfield type="text" formControlName="name" />
+  </tui-textfield>
+  <tui-error [appErrors]="nameErrors" formControlName="name" [error]="[] | tuiFieldError | async" />
+
+  <tui-textfield>
+    <label for="password" tuiLabel>Password</label>
+    <input id="password" tuiTextfield type="password" formControlName="password" />
+  </tui-textfield>
+
+  <tui-error
+    [appErrors]="passwordErrors"
+    formControlName="password"
+    [error]="[] | tuiFieldError | async"
+  />
+
+  <button tuiButton type="submit">Submit</button>
+</form>

@@ -1,6 +1,7 @@
 {
   "name": "fun-chat",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -31,7 +32,7 @@
     "@angular/build": "^20.0.0",
     "@angular/cli": "^20.0.0",
     "@angular/compiler-cli": "^20.0.0",
-    "@evalore/eslint-config": "^0.1.1",
+    "@evalore/eslint-config": "^0.1.2",
     "@evalore/prettier-config": "^0.0.4",
     "@types/jasmine": "~5.1.0",
     "angular-eslint": "^19.6.0",
