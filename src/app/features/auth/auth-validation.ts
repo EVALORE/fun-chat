@@ -8,6 +8,22 @@ export class AuthValidation {
   public readonly NAME_PATTERN = /^[a-zA-Z0-9]+$/u;
   public readonly PASSWORD_MIN_LENGTH = 8;
 
+  public readonly nameErrors = {
+    required: 'Name is required',
+    minlength: `Name must be at least ${String(this.NAME_MIN_LENGTH)} characters`,
+    maxlength: `Name must be at most  ${String(this.NAME_MAX_LENGTH)} characters`,
+    pattern: 'Only letters and digits are allowed',
+  };
+
+  public readonly passwordErrors = {
+    required: 'Password is required',
+    minlength: `Password must be at least ${String(this.PASSWORD_MIN_LENGTH)} characters`,
+    missingNumber: 'Add a number',
+    missingUpper: 'Add an uppercase letter',
+    missingLower: 'Add a lowercase letter',
+    missingSpecial: 'Add a special symbol',
+  };
+
   private readonly passwordValidations = [
     { key: 'missingLower', pattern: /[a-z]/u },
     { key: 'missingUpper', pattern: /[A-Z]/u },

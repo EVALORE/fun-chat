@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TuiAppearance, TuiButton, TuiError, TuiTextfield, TuiTitle } from '@taiga-ui/core';
 import { TuiCard, TuiForm, TuiHeader } from '@taiga-ui/layout';
@@ -29,23 +29,10 @@ import { Errors } from '../../shared/ui/errors';
   providers: [AuthValidation],
 })
 export class Auth {
-  private readonly validation = new AuthValidation();
+  private readonly validation = inject(AuthValidation);
 
-  protected readonly nameErrors = {
-    required: 'Name is required',
-    minlength: `Name must be at least ${String(this.validation.NAME_MIN_LENGTH)} characters`,
-    maxlength: `Name must be at most  ${String(this.validation.NAME_MAX_LENGTH)} characters`,
-    pattern: 'Only letters and digits are allowed',
-  };
-
-  protected readonly passwordErrors = {
-    required: 'Password is required',
-    minlength: `Password must be at least ${String(this.validation.PASSWORD_MIN_LENGTH)} characters`,
-    missingNumber: 'Add a number',
-    missingUpper: 'Add an uppercase letter',
-    missingLower: 'Add a lowercase letter',
-    missingSpecial: 'Add a special symbol',
-  };
+  protected readonly nameErrors = this.validation.nameErrors;
+  protected readonly passwordErrors = this.validation.passwordErrors;
 
   protected readonly authForm = new FormGroup({
     name: new FormControl('', [
