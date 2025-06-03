@@ -19,9 +19,9 @@ export class Errors {
 
   constructor() {
     effect(() => {
-      Object.entries(this.errors()).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(this.errors())) {
         this.tuiErrors[key] = value;
-      });
+      }
     });
   }
 }
