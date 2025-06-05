@@ -1,10 +1,10 @@
 import { TuiRoot } from '@taiga-ui/core';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Auth } from './features/auth/auth';
+import { Login } from './features/auth/login';
 
 @Component({
   selector: 'app-root',
-  imports: [TuiRoot, Auth],
+  imports: [TuiRoot, Login],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

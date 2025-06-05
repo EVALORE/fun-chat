@@ -5,6 +5,7 @@
   [style.max-width.rem]="24"
   [style.align-items]="'stretch'"
   [formGroup]="authForm"
+  (ngSubmit)="submit()"
 >
   <header tuiHeader>
     <h2 tuiTitle>Authentication</h2>
@@ -26,5 +27,5 @@
     [error]="[] | tuiFieldError | async"
   />
 
-  <button tuiButton type="submit">Submit</button>
+  <button tuiButton type="submit" [disabled]="authForm.invalid">Submit</button>
 </form>

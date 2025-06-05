@@ -23,12 +23,12 @@ import { Errors } from '../../shared/ui/errors';
     AsyncPipe,
     Errors,
   ],
-  templateUrl: './auth.html',
-  styleUrl: './auth.scss',
+  templateUrl: './login.html',
+  styleUrl: './login.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [AuthValidation],
 })
-export class Auth {
+export class Login {
   private readonly validation = inject(AuthValidation);
 
   protected readonly nameErrors = this.validation.nameErrors;
@@ -47,4 +47,12 @@ export class Auth {
       this.validation.passwordValidator(),
     ]),
   });
+
+  public submit(): void {
+    if (this.authForm.invalid) {
+      return;
+    }
+
+    this.authForm.reset();
+  }
 }
