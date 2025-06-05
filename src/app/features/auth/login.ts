@@ -1,11 +1,21 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TuiAppearance, TuiButton, TuiError, TuiTextfield, TuiTitle } from '@taiga-ui/core';
+import { ChangeDetectionStrategy, Component, inject, signal, untracked } from '@angular/core';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  TuiAppearance,
+  TuiButton,
+  TuiError,
+  TuiNotification,
+  TuiTextfield,
+  TuiTitle,
+} from '@taiga-ui/core';
 import { TuiCard, TuiForm, TuiHeader } from '@taiga-ui/layout';
 import { TuiFieldErrorPipe } from '@taiga-ui/kit';
 import { AsyncPipe } from '@angular/common';
 import { AuthValidation } from './auth-validation';
 import { Errors } from '../../shared/ui/errors';
+import { Auth } from '../../core/auth';
+import { map, merge, tap } from 'rxjs';
+import { WebSocketClient } from '../../core/api/web-socket-client';
 
 @Component({
   selector: 'app-auth',
@@ -22,6 +32,7 @@ import { Errors } from '../../shared/ui/errors';
     TuiFieldErrorPipe,
     AsyncPipe,
     Errors,
+    TuiNotification,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -29,19 +40,47 @@ import { Errors } from '../../shared/ui/errors';
   providers: [AuthValidation],
 })
 export class Login {
+  private readonly fb = inject(NonNullableFormBuilder);
   private readonly validation = inject(AuthValidation);
+  private readonly ws = inject(WebSocketClient);
+  private readonly auth = inject(Auth);
 
   protected readonly nameErrors = this.validation.nameErrors;
   protected readonly passwordErrors = this.validation.passwordErrors;
 
-  protected readonly authForm = new FormGroup({
-    name: new FormControl('', [
+  protected readonly isSubmitting = signal<boolean>(false);
+
+  protected readonly loginResponse$ = merge(
+    this.ws.onType('USER_LOGIN'),
+    this.ws.onType('ERROR'),
+  ).pipe(
+    map((response) =>
+      response.type === 'USER_LOGIN'
+        ? {
+            appearance: 'positive',
+            message: 'login successful proceed',
+          }
+        : {
+            appearance: 'error',
+            message: response.payload.error,
+          },
+    ),
+    tap((response) => {
+      if (response.appearance === 'positive') {
+        this.authForm.reset();
+      }
+      this.isSubmitting.set(false);
+    }),
+  );
+
+  protected readonly authForm = this.fb.group({
+    login: this.fb.control('', [
       Validators.required,
       Validators.minLength(this.validation.NAME_MIN_LENGTH),
       Validators.maxLength(this.validation.NAME_MAX_LENGTH),
       Validators.pattern(this.validation.NAME_PATTERN),
     ]),
-    password: new FormControl('', [
+    password: this.fb.control('', [
       Validators.required,
       Validators.minLength(this.validation.PASSWORD_MIN_LENGTH),
       this.validation.passwordValidator(),
@@ -49,10 +88,11 @@ export class Login {
   });
 
   public submit(): void {
-    if (this.authForm.invalid) {
+    if (this.authForm.invalid || untracked(this.isSubmitting)) {
       return;
     }
 
-    this.authForm.reset();
+    this.isSubmitting.set(true);
+    this.auth.login(this.authForm.getRawValue());
   }
 }
