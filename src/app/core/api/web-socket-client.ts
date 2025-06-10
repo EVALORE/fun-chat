@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { webSocket } from 'rxjs/webSocket';
 import { ChatApiRequest } from './types/request';
-import { ChatApiResponse } from './types/response';
-import { filter, Observable } from 'rxjs';
+import { ChatApiResponse, ErrorResponse } from './types/response';
+import { catchError, filter, Observable, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -14,14 +14,26 @@ export class WebSocketClient {
     this.socket.next(data);
   }
 
-  private onMessage(): Observable<ChatApiResponse | ChatApiRequest> {
-    return this.socket.asObservable();
+  public onConnectionError(): Observable<ErrorResponse> {
+    return this.socket.pipe(
+      catchError(() =>
+        of<ErrorResponse>({
+          id: '',
+          type: 'ERROR',
+          payload: { error: 'Server Connection Error' },
+        }),
+      ),
+      filter(
+        (response): response is ErrorResponse =>
+          response.type === 'ERROR' && response.payload.error === 'Server Connection Error',
+      ),
+    );
   }
 
   public onType<T extends ChatApiResponse['type']>(
     type: T,
   ): Observable<Extract<ChatApiResponse, { type: T }>> {
-    return this.onMessage().pipe(
+    return this.socket.pipe(
       filter((message): message is Extract<ChatApiResponse, { type: T }> => message.type === type),
     );
   }

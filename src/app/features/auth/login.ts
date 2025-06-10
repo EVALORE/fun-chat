@@ -51,6 +51,7 @@ export class Login {
   protected readonly isSubmitting = signal<boolean>(false);
 
   protected readonly loginResponse$ = merge(
+    this.ws.onConnectionError(),
     this.ws.onType('USER_LOGIN'),
     this.ws.onType('ERROR'),
   ).pipe(
