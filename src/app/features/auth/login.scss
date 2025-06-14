@@ -1,7 +1,9 @@
 :host {
   display: grid;
   place-items: center;
-  min-height: 100vh;
+  max-height: 100vh;
+  flex-grow: 1;
+  overflow: auto;
 }
 
 form {

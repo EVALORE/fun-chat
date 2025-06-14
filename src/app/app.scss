@@ -1,0 +1,17 @@
+tui-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+::ng-deep .t-root-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+}
+
+
+
+
+

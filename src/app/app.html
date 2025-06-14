@@ -1,3 +1,16 @@
 <tui-root>
-  <app-auth/>
+  <header tuiHeader>
+    <span tuiTitle> Online Chat </span>
+    <div class="user" tuiAccessories>
+      <button tuiButton>logout</button>
+      <tui-avatar src="@tui.user" />
+    </div>
+  </header>
+  <app-auth />
+  <footer>
+    <a href="https://github.com/EVALORE/fun-chat/tree/main">
+      <tui-icon icon="@tui.github" />
+    </a>
+    <span>2025</span>
+  </footer>
 </tui-root>
