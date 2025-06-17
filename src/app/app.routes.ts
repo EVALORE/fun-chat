@@ -9,17 +9,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login').then((m) => m.Login),
   },
   {
-    path: 'main',
+    path: '',
     canMatch: [mainGuard],
     loadComponent: () => import('./features/main/main').then((m) => m.Main),
   },
   {
-    path: '',
-    redirectTo: 'login',
-    pathMatch: 'full',
-  },
-  {
     path: '**',
-    redirectTo: 'login',
+    redirectTo: '',
   },
 ];

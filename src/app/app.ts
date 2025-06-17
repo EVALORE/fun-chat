@@ -1,12 +1,12 @@
 import { TuiButton, TuiIcon, TuiRoot, TuiTitle } from '@taiga-ui/core';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Login } from './features/auth/login';
 import { TuiAvatar } from '@taiga-ui/kit';
 import { TuiHeader } from '@taiga-ui/layout';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [TuiRoot, Login, TuiTitle, TuiButton, TuiAvatar, TuiHeader, TuiIcon],
+  imports: [TuiRoot, TuiTitle, TuiButton, TuiAvatar, TuiHeader, TuiIcon, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
