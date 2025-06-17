@@ -15,6 +15,10 @@ export default tseslint.config(
        * validatorFn requires to return ValidationErrors | null
        */
       'unicorn/no-null': 'off',
+      /**
+       * this rule generates false positives
+       */
+      'unicorn/consistent-function-scoping': 'off',
     },
   },
 );
