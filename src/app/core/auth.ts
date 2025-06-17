@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { WebSocketClient } from './api/web-socket-client';
-import { RouterHandler } from './router-handler';
+import { RouterHandler } from './routing/router-handler';
 import { first } from 'rxjs';
 
 @Injectable({
