@@ -1,10 +1,7 @@
 <tui-root>
-  <header tuiHeader>
+  <header tuiHeader="s">
     <span tuiTitle> Online Chat </span>
-    <div class="user" tuiAccessories>
-      <button tuiButton>logout</button>
-      <tui-avatar src="@tui.user" />
-    </div>
+    <app-user-menu />
   </header>
   <router-outlet />
   <footer>
