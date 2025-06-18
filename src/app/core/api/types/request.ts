@@ -8,5 +8,11 @@ export interface ApiRequest<T extends string, P> {
 
 export type UserLoginRequest = ApiRequest<'USER_LOGIN', UserLoginPayload>;
 export type UserLogoutRequest = ApiRequest<'USER_LOGOUT', UserLogoutPayload>;
+export type UserActiveRequest = ApiRequest<'USER_ACTIVE', null>;
+export type UserInactiveRequest = ApiRequest<'USER_INACTIVE', null>;
 
-export type ChatApiRequest = UserLoginRequest | UserLogoutRequest;
+export type ChatApiRequest =
+  | UserLoginRequest
+  | UserLogoutRequest
+  | UserActiveRequest
+  | UserInactiveRequest;

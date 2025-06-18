@@ -14,8 +14,12 @@ export interface UserLogoutResponsePayload {
   user: { login: string; isLogged: boolean };
 }
 
-export interface UserExternalPayload {
-  user: { login: string; isLogged: boolean };
+export interface UserActiveResponsePayload {
+  users: { login: string; isLogged: boolean }[];
+}
+
+export interface UserInactiveResponsePayload {
+  users: { login: string; isLogged: boolean }[];
 }
 
 export interface ErrorPayload {
