@@ -51,19 +51,19 @@ export class Login {
   protected readonly isSubmitting = signal<boolean>(false);
 
   protected readonly loginResponse$ = merge(
-    this.ws.onConnectionError(),
+    this.ws.connectionError$,
     this.ws.onType('USER_LOGIN'),
     this.ws.onType('ERROR'),
   ).pipe(
     map((response) =>
-      response.type === 'USER_LOGIN'
+      response.type === 'ERROR'
         ? {
-            appearance: 'positive',
-            message: 'login successful proceed',
-          }
-        : {
             appearance: 'error',
             message: response.payload.error,
+          }
+        : {
+            appearance: 'positive',
+            message: 'login successful proceeded',
           },
     ),
     tap((response) => {

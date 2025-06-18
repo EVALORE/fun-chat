@@ -1,40 +1,54 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { webSocket } from 'rxjs/webSocket';
 import { ChatApiRequest } from './types/request';
 import { ChatApiResponse, ErrorResponse } from './types/response';
-import { catchError, filter, Observable, of } from 'rxjs';
+import { catchError, filter, Observable, of, retry, Subscription, timer } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
-export class WebSocketClient {
-  private readonly socket = webSocket<ChatApiResponse | ChatApiRequest>('ws://localhost:4000');
+export class WebSocketClient implements OnDestroy {
+  private readonly socket$ = webSocket<ChatApiResponse | ChatApiRequest>('ws://localhost:4000');
+  private socketSub: Subscription | null = null;
+  public readonly connectionError$ = this.socket$.pipe(
+    catchError(() =>
+      of<ErrorResponse>({
+        id: '',
+        type: 'ERROR',
+        payload: { error: 'Server Connection Error' },
+      }),
+    ),
+  );
 
-  public send(data: ChatApiRequest): void {
-    this.socket.next(data);
+  constructor() {
+    this.connect();
   }
 
-  public onConnectionError(): Observable<ErrorResponse> {
-    return this.socket.pipe(
-      catchError(() =>
-        of<ErrorResponse>({
-          id: '',
-          type: 'ERROR',
-          payload: { error: 'Server Connection Error' },
+  private connect(): void {
+    this.socketSub = this.socket$
+      .pipe(
+        retry({
+          delay: (_, retryCount) => timer(retryCount * 2000),
+          count: 4,
         }),
-      ),
-      filter(
-        (response): response is ErrorResponse =>
-          response.type === 'ERROR' && response.payload.error === 'Server Connection Error',
-      ),
-    );
+      )
+      .subscribe();
+  }
+
+  public send(data: ChatApiRequest): void {
+    this.socket$.next(data);
   }
 
   public onType<T extends ChatApiResponse['type']>(
     type: T,
   ): Observable<Extract<ChatApiResponse, { type: T }>> {
-    return this.socket.pipe(
+    return this.socket$.pipe(
       filter((message): message is Extract<ChatApiResponse, { type: T }> => message.type === type),
     );
+  }
+
+  public ngOnDestroy(): void {
+    this.socketSub?.unsubscribe();
+    this.socket$.complete();
   }
 }
