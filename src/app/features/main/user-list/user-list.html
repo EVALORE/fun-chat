@@ -1,0 +1,6 @@
+@for (user of users | async; track user) {
+<div>
+  <span>{{ user.login }} </span>
+  <span>{{ user.isLogged }} </span>
+</div>
+}
