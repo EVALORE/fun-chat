@@ -4,6 +4,6 @@ import { computed, Injectable, signal } from '@angular/core';
   providedIn: 'root',
 })
 export class UserStore {
-  public readonly user = signal<string>('');
-  public readonly isLogged = computed(() => Boolean(this.user()));
+  public readonly login = signal<string>('');
+  public readonly isLogged = computed(() => Boolean(true));
 }

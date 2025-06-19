@@ -23,7 +23,7 @@ export class Auth {
       .onType('USER_LOGIN')
       .pipe(first())
       .subscribe(() => {
-        this.userStore.user.set(login);
+        this.userStore.login.set(login);
         this.routerHandler.redirectToMain();
       });
   }
@@ -39,7 +39,7 @@ export class Auth {
       .onType('USER_LOGOUT')
       .pipe(first())
       .subscribe(() => {
-        this.userStore.user.set('');
+        this.userStore.login.set('');
         this.routerHandler.redirectToLogin();
       });
   }

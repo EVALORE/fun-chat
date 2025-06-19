@@ -1,6 +1,21 @@
-@for (user of users | async; track user) {
+<search tuiSearch>
+  <form>
+    <fieldset tuiTextfieldSize="s">
+      <tui-textfield iconStart="@tui.search">
+        <input placeholder="Search" tuiTextfield />
+      </tui-textfield>
+    </fieldset>
+  </form>
+</search>
 <div>
-  <span>{{ user.login }} </span>
-  <span>{{ user.isLogged }} </span>
+  @for (user of users | async; track user) {
+  <div class="user" tuiCell="s">
+    <button tuiButton appearance="flat-grayscale" type="button">
+      <span>{{ user.login }}</span>
+      <span
+        [tuiStatus]="user.isLogged ? 'var(--tui-status-positive)' : 'var(--tui-status-neutral)'"
+      ></span>
+    </button>
+  </div>
+  }
 </div>
-}
