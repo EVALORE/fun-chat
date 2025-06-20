@@ -2,7 +2,13 @@
   <form>
     <fieldset tuiTextfieldSize="s">
       <tui-textfield iconStart="@tui.search">
-        <input placeholder="Search" tuiTextfield />
+        <input
+          [ngModel]="search()"
+          (ngModelChange)="searchChange($event)"
+          name="search"
+          placeholder="Search"
+          tuiTextfield
+        />
       </tui-textfield>
     </fieldset>
   </form>
