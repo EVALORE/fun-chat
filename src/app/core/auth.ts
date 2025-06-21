@@ -14,7 +14,7 @@ export class Auth {
 
   public login({ login, password }: { login: string; password: string }): void {
     this.ws.send({
-      id: String(new Date()),
+      id: String(Date.now()),
       type: 'USER_LOGIN',
       payload: { user: { login, password } },
     });
@@ -22,15 +22,18 @@ export class Auth {
     this.ws
       .onType('USER_LOGIN')
       .pipe(first())
-      .subscribe(() => {
-        this.userStore.login.set(login);
+      .subscribe((response) => {
+        this.userStore.login({
+          ...response.payload.user,
+          password,
+        });
         this.routerHandler.redirectToMain();
       });
   }
 
   public logout(): void {
     this.ws.send({
-      id: String(new Date()),
+      id: String(Date.now()),
       type: 'USER_LOGOUT',
       payload: { user: { login: '', password: '' } },
     });
@@ -39,7 +42,7 @@ export class Auth {
       .onType('USER_LOGOUT')
       .pipe(first())
       .subscribe(() => {
-        this.userStore.login.set('');
+        this.userStore.logout();
         this.routerHandler.redirectToLogin();
       });
   }

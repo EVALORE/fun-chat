@@ -1,25 +1,27 @@
+import { AppUser, User } from '../../user';
+
 export interface UserLoginPayload {
-  user: { login: string; password: string };
+  user: Pick<AppUser, 'login' | 'password'>;
 }
 
 export interface UserLoginResponsePayload {
-  user: { login: string; isLogged: boolean };
+  user: User;
 }
 
 export interface UserLogoutPayload {
-  user: { login: string; password: string };
+  user: Pick<AppUser, 'login' | 'password'>;
 }
 
 export interface UserLogoutResponsePayload {
-  user: { login: string; isLogged: boolean };
+  user: User;
 }
 
 export interface UserActiveResponsePayload {
-  users: { login: string; isLogged: boolean }[];
+  users: User[];
 }
 
 export interface UserInactiveResponsePayload {
-  users: { login: string; isLogged: boolean }[];
+  users: User[];
 }
 
 export interface ErrorPayload {

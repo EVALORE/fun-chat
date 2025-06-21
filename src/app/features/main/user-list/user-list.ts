@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, output, signal } from '@angular/core';
 import { WebSocketClient } from '../../../core/api/web-socket-client';
 import { combineLatest, map } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
@@ -30,6 +30,7 @@ export class UserList implements OnInit {
   private readonly user = inject(UserStore);
 
   public readonly search = signal<string>('');
+  public readonly selectedUser = output<{ login: string; isLogged: boolean }>();
 
   public readonly users = combineLatest([
     this.ws.onType('USER_ACTIVE'),
@@ -38,7 +39,7 @@ export class UserList implements OnInit {
   ]).pipe(
     map(([active, inactive, search]) =>
       [...active.payload.users, ...inactive.payload.users].filter(
-        (user) => user.login !== this.user.login() && user.login.includes(search),
+        (user) => user.login !== this.user.name() && user.login.includes(search),
       ),
     ),
   );
