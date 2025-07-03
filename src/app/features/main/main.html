@@ -1,2 +1,4 @@
-<app-user-list />
-<app-user-dialog />
+<app-user-list (selectedUser)="receiver.set($event)" />
+@if (receiver(); as user) {
+<app-user-dialog [receiver]="user" />
+}

@@ -8,6 +8,7 @@ import { UserStore } from '../../../core/user-store';
 import { TuiStatus } from '@taiga-ui/kit';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { User } from '../../../core/user';
 
 @Component({
   selector: 'app-user-list',
@@ -30,7 +31,7 @@ export class UserList implements OnInit {
   private readonly user = inject(UserStore);
 
   public readonly search = signal<string>('');
-  public readonly selectedUser = output<{ login: string; isLogged: boolean }>();
+  public readonly selectedUser = output<User>();
 
   public readonly users = combineLatest([
     this.ws.onType('USER_ACTIVE'),
@@ -46,6 +47,10 @@ export class UserList implements OnInit {
 
   public searchChange(value: string): void {
     this.search.set(value);
+  }
+
+  public selectUser(user: User): void {
+    this.selectedUser.emit(user);
   }
 
   public ngOnInit(): void {

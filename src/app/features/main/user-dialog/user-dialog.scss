@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--tui-background-base-alt);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  height: 3rem;
+  padding: 0 1rem;
+  align-items: center;
+  border-bottom: 1px solid var(--tui-border-normal);
+}
+
+.bottom {
+  padding: 1rem;
+
+  input:focus-visible {
+    outline: var(--tui-border-focus) auto 0.1px;
+  }
+}
+
+
+.conversation {
+  height: 100%;
+}

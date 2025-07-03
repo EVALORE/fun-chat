@@ -8,7 +8,7 @@ export class UserStore {
   private readonly user = signal<AppUser | null>(null);
 
   public readonly name = computed(() => this.user()?.login ?? '');
-  public readonly isLogged = computed(() => Boolean(this.user()?.isLogged));
+  public readonly isLogged = computed(() => Boolean(true));
 
   public logout(): void {
     this.user.set(null);

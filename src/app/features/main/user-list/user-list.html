@@ -16,7 +16,7 @@
 <div>
   @for (user of users | async; track user) {
   <div class="user" tuiCell="s">
-    <button tuiButton appearance="flat-grayscale" type="button">
+    <button tuiButton appearance="flat-grayscale" type="button" (click)="selectUser(user)">
       <span>{{ user.login }}</span>
       <span
         [tuiStatus]="user.isLogged ? 'var(--tui-status-positive)' : 'var(--tui-status-neutral)'"

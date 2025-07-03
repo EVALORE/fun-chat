@@ -1,0 +1,15 @@
+<div class="top">
+  <span>{{receiver().login}}</span>
+  @if (receiver().isLogged) {
+  <tui-badge appearance="positive" tuiStatus>Online</tui-badge>
+  } @else {
+  <tui-badge appearance="neutral" tuiStatus>Offline</tui-badge>
+  }
+</div>
+<div class="conversation"></div>
+<div class="bottom">
+  <tui-textfield>
+    <input tuiTextfield placeholder="Message" />
+    <tui-icon icon="@tui.send" />
+  </tui-textfield>
+</div>
