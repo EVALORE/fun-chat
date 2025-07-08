@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, output, signal } from '@angular/core';
 import { WebSocketClient } from '../../../core/api/web-socket-client';
-import { combineLatest, map } from 'rxjs';
+import { combineLatest, map, startWith } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
 import { TuiCell, TuiSearch } from '@taiga-ui/layout';
@@ -37,13 +37,21 @@ export class UserList implements OnInit {
     this.ws.onType('USER_ACTIVE'),
     this.ws.onType('USER_INACTIVE'),
     toObservable(this.search),
-    this.ws.onType('USER_EXTERNAL_LOGIN'),
+    this.ws.onType('USER_EXTERNAL_LOGIN').pipe(startWith(null)),
   ]).pipe(
-    map(([active, inactive, search]) =>
-      [...active.payload.users, ...inactive.payload.users].filter(
+    map(([active, inactive, search, externalLogin]) => {
+      const allUsers: User[] = [...active.payload.users, ...inactive.payload.users];
+
+      if (externalLogin) {
+        allUsers.push(externalLogin.payload.user);
+      }
+
+      const uniqueUsers = [...new Map(allUsers.map((user) => [user.login, user])).values()];
+
+      return uniqueUsers.filter(
         (user) => user.login !== this.user.name() && user.login.includes(search),
-      ),
-    ),
+      );
+    }),
   );
 
   public searchChange(value: string): void {
