@@ -37,6 +37,7 @@ export class UserList implements OnInit {
     this.ws.onType('USER_ACTIVE'),
     this.ws.onType('USER_INACTIVE'),
     toObservable(this.search),
+    this.ws.onType('USER_EXTERNAL_LOGIN'),
   ]).pipe(
     map(([active, inactive, search]) =>
       [...active.payload.users, ...inactive.payload.users].filter(
@@ -54,16 +55,7 @@ export class UserList implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.ws.send({
-      id: String(Date.now()),
-      type: 'USER_ACTIVE',
-      payload: null,
-    });
-
-    this.ws.send({
-      id: String(Date.now()),
-      type: 'USER_INACTIVE',
-      payload: null,
-    });
+    this.ws.send('USER_ACTIVE', null);
+    this.ws.send('USER_INACTIVE', null);
   }
 }

@@ -13,11 +13,7 @@ export class Auth {
   private readonly userStore = inject(UserStore);
 
   public login({ login, password }: { login: string; password: string }): void {
-    this.ws.send({
-      id: String(Date.now()),
-      type: 'USER_LOGIN',
-      payload: { user: { login, password } },
-    });
+    this.ws.send('USER_LOGIN', { user: { login, password } });
 
     this.ws
       .onType('USER_LOGIN')
@@ -32,11 +28,7 @@ export class Auth {
   }
 
   public logout(): void {
-    this.ws.send({
-      id: String(Date.now()),
-      type: 'USER_LOGOUT',
-      payload: { user: { login: '', password: '' } },
-    });
+    this.ws.send('USER_LOGOUT', { user: { login: '', password: '' } });
 
     this.ws
       .onType('USER_LOGOUT')

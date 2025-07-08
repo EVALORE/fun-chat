@@ -35,8 +35,15 @@ export class WebSocketClient implements OnDestroy {
       .subscribe();
   }
 
-  public send(data: ChatApiRequest): void {
-    this.socket$.next(data);
+  public send<T extends ChatApiRequest['type']>(
+    type: T,
+    payload: Extract<ChatApiRequest, { type: T }>['payload'],
+  ): void {
+    this.socket$.next({
+      id: String(Date.now()),
+      type,
+      payload,
+    } as ChatApiRequest);
   }
 
   public onType<T extends ChatApiResponse['type']>(
