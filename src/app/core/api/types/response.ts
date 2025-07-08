@@ -1,6 +1,9 @@
 import {
   ErrorPayload,
+  MessageFetchResponsePayload,
+  MessageSendResponsePayload,
   UserActiveResponsePayload,
+  UserExternalLoginResponsePayload,
   UserInactiveResponsePayload,
   UserLoginResponsePayload,
   UserLogoutResponsePayload,
@@ -16,6 +19,12 @@ export type UserLoginResponse = ApiResponse<'USER_LOGIN', UserLoginResponsePaylo
 export type UserLogoutResponse = ApiResponse<'USER_LOGOUT', UserLogoutResponsePayload>;
 export type UserActiveResponse = ApiResponse<'USER_ACTIVE', UserActiveResponsePayload>;
 export type UserInactiveResponse = ApiResponse<'USER_INACTIVE', UserInactiveResponsePayload>;
+export type MessageSendResponse = ApiResponse<'MSG_SEND', MessageSendResponsePayload>;
+export type MessageFetchResponse = ApiResponse<'MSG_FROM_USER', MessageFetchResponsePayload>;
+export type UserExternalLoginResponse = ApiResponse<
+  'USER_EXTERNAL_LOGIN',
+  UserExternalLoginResponsePayload
+>;
 export type ErrorResponse = ApiResponse<'ERROR', ErrorPayload>;
 
 export type ChatApiResponse =
@@ -23,4 +32,7 @@ export type ChatApiResponse =
   | UserLogoutResponse
   | UserActiveResponse
   | UserInactiveResponse
+  | MessageSendResponse
+  | MessageFetchResponse
+  | UserExternalLoginResponse
   | ErrorResponse;
