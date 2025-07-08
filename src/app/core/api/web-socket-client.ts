@@ -40,7 +40,7 @@ export class WebSocketClient implements OnDestroy {
     payload: Extract<ChatApiRequest, { type: T }>['payload'],
   ): void {
     this.socket$.next({
-      id: String(Date.now()),
+      id: crypto.randomUUID(),
       type,
       payload,
     } as ChatApiRequest);
