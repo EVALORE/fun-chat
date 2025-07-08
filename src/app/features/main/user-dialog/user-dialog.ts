@@ -1,15 +1,36 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angular/core';
 import { User } from '../../../core/user';
-import { TuiBadge, TuiStatus } from '@taiga-ui/kit';
+import { TuiBadge, TuiMessage, TuiStatus } from '@taiga-ui/kit';
 import { TuiIcon, TuiTextfield } from '@taiga-ui/core';
+import { WebSocketClient } from '../../../core/api/web-socket-client';
+import { AsyncPipe } from '@angular/common';
+import { map, merge, scan } from 'rxjs';
 
 @Component({
   selector: 'app-user-dialog',
-  imports: [TuiBadge, TuiStatus, TuiTextfield, TuiIcon],
+  imports: [TuiBadge, TuiStatus, TuiTextfield, TuiIcon, TuiMessage, AsyncPipe],
   templateUrl: './user-dialog.html',
   styleUrl: './user-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserDialog {
+  private readonly ws = inject(WebSocketClient);
   public readonly receiver = input.required<User>();
+
+  public messages = merge(this.ws.onType('MSG_FROM_USER'), this.ws.onType('MSG_SEND')).pipe(
+    map((response) =>
+      response.type === 'MSG_SEND' ? [response.payload.message] : response.payload.messages,
+    ),
+    scan((accumulator, currentMessages) => [...accumulator, ...currentMessages]),
+  );
+
+  constructor() {
+    effect(() => {
+      this.ws.send('MSG_FROM_USER', { user: { login: this.receiver().login } });
+    });
+  }
+
+  public send(message: string): void {
+    this.ws.send('MSG_SEND', { message: { to: this.receiver().login, text: message } });
+  }
 }

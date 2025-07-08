@@ -6,10 +6,20 @@
   <tui-badge appearance="neutral" tuiStatus>Offline</tui-badge>
   }
 </div>
-<div class="conversation"></div>
+<div class="conversation">
+  @for (message of messages | async; track message.id) {
+  <div tuiMessage>{{message.text}}</div>
+  }
+</div>
 <div class="bottom">
   <tui-textfield>
-    <input tuiTextfield placeholder="Message" />
-    <tui-icon icon="@tui.send" />
+    <input
+      type="text"
+      tuiTextfield
+      placeholder="Message"
+      (keydown.enter)="send(messageInput.value)"
+      #messageInput
+    />
+    <tui-icon icon="@tui.send" tuiMessage />
   </tui-textfield>
 </div>
