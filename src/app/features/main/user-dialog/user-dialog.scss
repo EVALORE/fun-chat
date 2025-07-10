@@ -1,6 +1,6 @@
 :host {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   background-color: var(--tui-background-base-alt);
 }
 
@@ -14,14 +14,18 @@
 }
 
 .bottom {
-  padding: 1rem;
+  padding: .5rem;
 
   input:focus-visible {
     outline: var(--tui-border-focus) auto 0.1px;
   }
 }
 
-
 .conversation {
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding: .5rem .5rem 0;
+  overflow: auto;
+  height: 30rem;
 }
