@@ -19,9 +19,11 @@ export class UserDialog {
 
   public messages = merge(this.ws.onType('MSG_FROM_USER'), this.ws.onType('MSG_SEND')).pipe(
     map((response) =>
-      response.type === 'MSG_SEND' ? [response.payload.message] : response.payload.messages,
+      response.type === 'MSG_FROM_USER' ? response.payload.messages : [response.payload.message],
     ),
-    scan((accumulator, currentMessages) => [...accumulator, ...currentMessages]),
+    scan((accumulator, currentMessages) =>
+      currentMessages.length === 1 ? [...accumulator, ...currentMessages] : currentMessages,
+    ),
   );
 
   constructor() {

@@ -8,7 +8,9 @@
 </div>
 <div class="conversation">
   @for (message of messages | async; track message.id) {
-  <div tuiMessage>{{message.text}}</div>
+  <span [appearance]=" message.from !== receiver().login ? 'accent' : 'neutral'" tuiMessage>
+    {{message.text}}
+  </span>
   }
 </div>
 <div class="bottom">
