@@ -6,22 +6,39 @@
   <tui-badge appearance="neutral" tuiStatus>Offline</tui-badge>
   }
 </div>
+
 <div class="conversation">
   @for (message of messages | async; track message.id) {
-  <span [appearance]=" message.from !== receiver().login ? 'accent' : 'neutral'" tuiMessage>
-    {{message.text}}
-  </span>
+  <div tuiCell>
+    <div tuiAccessories>{{message.datetime | date: 'HH:mm'}}</div>
+    <div>
+      <div>
+        {{message.from}}
+        <tui-icon
+          [icon]="message.status.isDelivered ? '@tui.check-check' : '@tui.check'"
+          tuiBadge
+          size="s"
+        />
+      </div>
+
+      <span [appearance]=" message.from !== receiver().login ? 'accent' : 'neutral'" tuiMessage>
+        {{message.text}}
+      </span>
+    </div>
+  </div>
+
   }
 </div>
+
 <div class="bottom">
   <tui-textfield>
     <input
       type="text"
       tuiTextfield
       placeholder="Message"
-      (keydown.enter)="send(messageInput.value)"
-      #messageInput
+      [(ngModel)]="userInput"
+      (keydown.enter)="send()"
     />
-    <tui-icon icon="@tui.send" tuiMessage />
+    <tui-icon icon="@tui.send" (click)="send()" />
   </tui-textfield>
 </div>
