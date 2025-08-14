@@ -17,11 +17,11 @@ export interface UserLogoutResponsePayload {
   user: User;
 }
 
-export interface UserActiveResponsePayload {
-  users: User[];
+export interface UserListRequestPayload {
+  type: 'online' | 'offline' | 'all';
 }
 
-export interface UserInactiveResponsePayload {
+export interface UserListResponsePayload {
   users: User[];
 }
 
@@ -52,4 +52,28 @@ export interface MessageFetchResponsePayload {
 
 export interface UserExternalLoginResponsePayload {
   user: User;
+}
+
+export interface MessageDeliverResponsePayload {
+  message: {
+    id: string;
+    status: {
+      isDelivered: boolean;
+    };
+  };
+}
+
+export interface MessageReadRequestPayload {
+  message: {
+    id: string;
+  };
+}
+
+export interface MessageReadResponsePayload {
+  message: {
+    id: string;
+    status: {
+      isRead: boolean;
+    };
+  };
 }

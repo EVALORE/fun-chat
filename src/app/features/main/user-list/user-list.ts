@@ -34,13 +34,12 @@ export class UserList implements OnInit {
   public readonly selectedUser = output<User>();
 
   public readonly users = combineLatest([
-    this.ws.onType('USER_ACTIVE'),
-    this.ws.onType('USER_INACTIVE'),
+    this.ws.onType('USER_LIST'),
     toObservable(this.search),
     this.ws.onType('USER_EXTERNAL_LOGIN').pipe(startWith(null)),
   ]).pipe(
-    map(([active, inactive, search, externalLogin]) => {
-      const allUsers: User[] = [...active.payload.users, ...inactive.payload.users];
+    map(([users, search, externalLogin]) => {
+      const allUsers: User[] = [...users.payload.users];
 
       if (externalLogin) {
         allUsers.push(externalLogin.payload.user);
@@ -63,7 +62,6 @@ export class UserList implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.ws.send('USER_ACTIVE', null);
-    this.ws.send('USER_INACTIVE', null);
+    this.ws.send('USER_LIST', { type: 'all' });
   }
 }
