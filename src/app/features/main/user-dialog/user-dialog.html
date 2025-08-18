@@ -9,24 +9,19 @@
 
 <div class="conversation">
   @for (message of messages | async; track message.id) {
-  <div tuiCell>
-    <div tuiAccessories>{{message.datetime | date: 'HH:mm'}}</div>
+
+  <div tuiCell="s">
     <div>
-      <div>
-        {{message.from}}
-        <tui-icon
-          [icon]="message.status.isDelivered ? '@tui.check-check' : '@tui.check'"
-          tuiBadge
-          size="s"
-        />
+      <div tuiSubtitle>
+        <span>{{message.from}}</span> |
+        <span>{{message.datetime | date: 'HH:mm'}}</span>
+        <tui-icon [style.font-size.rem]="1" [icon]="getStatusIcon(message)" />
+        {{message.status.isRead}}
       </div>
 
-      <span [appearance]=" message.from !== receiver().login ? 'accent' : 'neutral'" tuiMessage>
-        {{message.text}}
-      </span>
+      <div [appearance]="getMessageAppearance(message)" tuiMessage>{{message.text}}</div>
     </div>
   </div>
-
   }
 </div>
 

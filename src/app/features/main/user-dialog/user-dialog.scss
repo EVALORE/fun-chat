@@ -25,7 +25,13 @@
   display: flex;
   flex-direction: column;
   gap: .5rem;
-  padding: .5rem .5rem 0;
   overflow: auto;
   height: 31.5rem;
+}
+
+
+.unread {
+  width: 70%;
+  height: .5rem;
+  background-color: var(--tui-background-accent-2);
 }
