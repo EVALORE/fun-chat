@@ -19,7 +19,7 @@
     <button tuiButton appearance="flat-grayscale" type="button" (click)="selectUser(user)">
       <span>{{ user.login }}</span>
       <span
-        [tuiStatus]="user.isLogged ? 'var(--tui-status-positive)' : 'var(--tui-status-neutral)'"
+        [tuiStatus]="user.isOnline ? 'var(--tui-status-positive)' : 'var(--tui-status-neutral)'"
       ></span>
     </button>
   </div>

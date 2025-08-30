@@ -1,6 +1,6 @@
 export interface User {
   login: string;
-  isLogged: string;
+  isOnline: boolean;
 }
 
 export interface AppUser extends User {

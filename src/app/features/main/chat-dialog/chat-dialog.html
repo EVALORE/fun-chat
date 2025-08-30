@@ -1,6 +1,6 @@
 <div class="top">
   <span>{{receiver().login}}</span>
-  @if (receiver().isLogged) {
+  @if (receiver().isOnline) {
   <tui-badge appearance="positive" tuiStatus>Online</tui-badge>
   } @else {
   <tui-badge appearance="neutral" tuiStatus>Offline</tui-badge>
@@ -15,8 +15,11 @@
       <div tuiSubtitle>
         <span>{{message.from}}</span> |
         <span>{{message.datetime | date: 'HH:mm'}}</span>
-        <tui-icon [style.font-size.rem]="1" [icon]="getStatusIcon(message)" />
-        {{message.status.isRead}}
+        <tui-icon
+          [style.font-size.rem]="1"
+          [icon]="getStatusIcon(message)"
+          [style.color]="message.isRead?'var(--tui-background-accent-1)' : ''"
+        />
       </div>
 
       <div [appearance]="getMessageAppearance(message)" tuiMessage>{{message.text}}</div>

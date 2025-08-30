@@ -71,28 +71,26 @@ export class MessageHandler {
     { messages }: MessageFetchResponsePayload,
     receiverLogin: string,
   ): void {
-    const unread = messages.filter(
-      (message) => message.from === receiverLogin && !message.status.isRead,
-    );
+    const unread = messages.filter((message) => message.from === receiverLogin && !message.isRead);
     if (unread.length > 0) {
       for (const message of unread) {
-        this.ws.send('MSG_READ', { message });
+        this.ws.send('MSG_READ', { id: message.id });
       }
     }
   }
 
   private handleIncomingMessage(
-    { message }: MessageSendResponsePayload,
+    { from, id }: MessageSendResponsePayload,
     receiverLogin: string,
   ): void {
-    if (message.from === receiverLogin) {
-      this.ws.send('MSG_READ', { message });
+    if (from === receiverLogin) {
+      this.ws.send('MSG_READ', { id });
     }
   }
 
   private handleMessageSend(
     accumulator: Message[],
-    { message }: MessageSendResponsePayload,
+    message: MessageSendResponsePayload,
     receiverLogin: string,
   ): Message[] {
     if (message.from === receiverLogin || message.to === receiverLogin) {
@@ -106,9 +104,7 @@ export class MessageHandler {
     payload: MessageDeliverResponsePayload,
   ): Message[] {
     return accumulator.map((message) =>
-      message.id === payload.message.id
-        ? { ...message, status: { ...message.status, isDelivered: true } }
-        : message,
+      message.id === payload.id ? { ...message, isDelivered: true } : message,
     );
   }
 
@@ -117,9 +113,7 @@ export class MessageHandler {
     payload: MessageReadResponsePayload,
   ): Message[] {
     return accumulator.map((message) =>
-      message.id === payload.message.id
-        ? { ...message, status: { ...message.status, isRead: true } }
-        : message,
+      message.id === payload.id ? { ...message, isRead: true } : message,
     );
   }
 }

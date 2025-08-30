@@ -13,14 +13,14 @@ export class Auth {
   private readonly userStore = inject(UserStore);
 
   public login({ login, password }: { login: string; password: string }): void {
-    this.ws.send('USER_LOGIN', { user: { login, password } });
+    this.ws.send('USER_LOGIN', { login, password });
 
     this.ws
       .onType('USER_LOGIN')
       .pipe(first())
       .subscribe((response) => {
         this.userStore.login({
-          ...response.payload.user,
+          ...response.payload,
           password,
         });
         this.routerHandler.redirectToMain();
@@ -28,7 +28,7 @@ export class Auth {
   }
 
   public logout(): void {
-    this.ws.send('USER_LOGOUT', { user: { login: '', password: '' } });
+    this.ws.send('USER_LOGOUT', { login: '' });
 
     this.ws
       .onType('USER_LOGOUT')

@@ -5,6 +5,7 @@ import {
   MessageReadResponsePayload,
   MessageSendResponsePayload,
   UserExternalLoginResponsePayload,
+  UserExternalLogoutResponsePayload,
   UserListResponsePayload,
   UserLoginResponsePayload,
   UserLogoutResponsePayload,
@@ -25,6 +26,10 @@ export type UserExternalLoginResponse = ApiResponse<
   'USER_EXTERNAL_LOGIN',
   UserExternalLoginResponsePayload
 >;
+export type UserExternalLogoutResponse = ApiResponse<
+  'USER_EXTERNAL_LOGOUT',
+  UserExternalLogoutResponsePayload
+>;
 export type MessageDeliverResponse = ApiResponse<'MSG_DELIVER', MessageDeliverResponsePayload>;
 export type MessageReadResponse = ApiResponse<'MSG_READ', MessageReadResponsePayload>;
 export type ErrorResponse = ApiResponse<'ERROR', ErrorPayload>;
@@ -36,6 +41,7 @@ export type ChatApiResponse =
   | MessageSendResponse
   | MessageFetchResponse
   | UserExternalLoginResponse
+  | UserExternalLogoutResponse
   | MessageDeliverResponse
   | MessageReadResponse
   | ErrorResponse;

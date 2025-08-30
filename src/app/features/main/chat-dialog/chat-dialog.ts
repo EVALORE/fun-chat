@@ -21,11 +21,11 @@ import { MessageHandler } from './message-handler';
     DatePipe,
     TuiCell,
   ],
-  templateUrl: './user-dialog.html',
-  styleUrl: './user-dialog.scss',
+  templateUrl: './chat-dialog.html',
+  styleUrl: './chat-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UserDialog {
+export class ChatDialog {
   private readonly ws = inject(WebSocketClient);
   private readonly messageStore = new MessageHandler();
   public readonly receiver = input.required<User>();
@@ -35,7 +35,7 @@ export class UserDialog {
 
   constructor() {
     effect(() => {
-      this.ws.send('MSG_FROM_USER', { user: { login: this.receiver().login } });
+      this.ws.send('MSG_FROM_USER', { login: this.receiver().login });
     });
 
     effect(() => {
@@ -47,12 +47,12 @@ export class UserDialog {
     if (this.userInput.length === 0) {
       return;
     }
-    this.ws.send('MSG_SEND', { message: { to: this.receiver().login, text: this.userInput } });
+    this.ws.send('MSG_SEND', { to: this.receiver().login, text: this.userInput });
     this.userInput = '';
   }
 
-  public getStatusIcon(message: { status: { isDelivered: boolean } }): string {
-    return message.status.isDelivered ? '@tui.check-check' : '@tui.check';
+  public getStatusIcon(message: { isDelivered: boolean }): string {
+    return message.isDelivered ? '@tui.check-check' : '@tui.check';
   }
 
   public getMessageAppearance(message: { from: string }): string {

@@ -1,24 +1,27 @@
-import { AppUser, User } from '../../user';
+import { User } from '../../user';
 import { Message } from '../../message';
 
 export interface UserLoginPayload {
-  user: Pick<AppUser, 'login' | 'password'>;
+  login: string;
+  password: string;
 }
 
 export interface UserLoginResponsePayload {
-  user: User;
+  login: string;
+  isOnline: boolean;
 }
 
 export interface UserLogoutPayload {
-  user: Pick<AppUser, 'login' | 'password'>;
+  login: string;
 }
 
 export interface UserLogoutResponsePayload {
-  user: User;
+  login: string;
+  isOnline: boolean;
 }
 
 export interface UserListRequestPayload {
-  type: 'online' | 'offline' | 'all';
+  filter?: 'online' | 'offline';
 }
 
 export interface UserListResponsePayload {
@@ -30,20 +33,14 @@ export interface ErrorPayload {
 }
 
 export interface MessageSendRequestPayload {
-  message: {
-    to: string;
-    text: string;
-  };
+  to: string;
+  text: string;
 }
 
-export interface MessageSendResponsePayload {
-  message: Message;
-}
+export type MessageSendResponsePayload = Message;
 
 export interface MessageFetchRequestPayload {
-  user: {
-    login: string;
-  };
+  login: string;
 }
 
 export interface MessageFetchResponsePayload {
@@ -51,29 +48,25 @@ export interface MessageFetchResponsePayload {
 }
 
 export interface UserExternalLoginResponsePayload {
-  user: User;
+  login: string;
+  isOnline: boolean;
+}
+
+export interface UserExternalLogoutResponsePayload {
+  login: string;
+  isOnline: boolean;
 }
 
 export interface MessageDeliverResponsePayload {
-  message: {
-    id: string;
-    status: {
-      isDelivered: boolean;
-    };
-  };
+  id: string;
+  isDelivered: boolean;
 }
 
 export interface MessageReadRequestPayload {
-  message: {
-    id: string;
-  };
+  id: string;
 }
 
 export interface MessageReadResponsePayload {
-  message: {
-    id: string;
-    status: {
-      isRead: boolean;
-    };
-  };
+  id: string;
+  isRead: boolean;
 }

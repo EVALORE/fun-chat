@@ -37,12 +37,21 @@ export class UserList implements OnInit {
     this.ws.onType('USER_LIST'),
     toObservable(this.search),
     this.ws.onType('USER_EXTERNAL_LOGIN').pipe(startWith(null)),
+    this.ws.onType('USER_EXTERNAL_LOGOUT').pipe(startWith(null)),
   ]).pipe(
-    map(([users, search, externalLogin]) => {
+    map(([users, search, externalLogin, externalLogout]) => {
       const allUsers: User[] = [...users.payload.users];
 
       if (externalLogin) {
-        allUsers.push(externalLogin.payload.user);
+        allUsers.push(externalLogin.payload);
+      }
+
+      if (externalLogout) {
+        allUsers.splice(
+          allUsers.findIndex((user) => user.login === externalLogout.payload.login),
+          1,
+          externalLogout.payload,
+        );
       }
 
       const uniqueUsers = [...new Map(allUsers.map((user) => [user.login, user])).values()];
@@ -62,6 +71,6 @@ export class UserList implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.ws.send('USER_LIST', { type: 'all' });
+    this.ws.send('USER_LIST', {});
   }
 }
