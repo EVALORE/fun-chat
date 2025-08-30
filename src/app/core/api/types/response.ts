@@ -1,6 +1,8 @@
 import {
   ErrorPayload,
+  MessageDeleteResponsePayload,
   MessageDeliverResponsePayload,
+  MessageEditResponsePayload,
   MessageFetchResponsePayload,
   MessageReadResponsePayload,
   MessageSendResponsePayload,
@@ -32,6 +34,8 @@ export type UserExternalLogoutResponse = ApiResponse<
 >;
 export type MessageDeliverResponse = ApiResponse<'MSG_DELIVER', MessageDeliverResponsePayload>;
 export type MessageReadResponse = ApiResponse<'MSG_READ', MessageReadResponsePayload>;
+export type MessageEditResponse = ApiResponse<'MSG_EDIT', MessageEditResponsePayload>;
+export type MessageDeleteResponse = ApiResponse<'MSG_DELETE', MessageDeleteResponsePayload>;
 export type ErrorResponse = ApiResponse<'ERROR', ErrorPayload>;
 
 export type ChatApiResponse =
@@ -40,6 +44,8 @@ export type ChatApiResponse =
   | UserListResponse
   | MessageSendResponse
   | MessageFetchResponse
+  | MessageEditResponse
+  | MessageDeleteResponse
   | UserExternalLoginResponse
   | UserExternalLogoutResponse
   | MessageDeliverResponse

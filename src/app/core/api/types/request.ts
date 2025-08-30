@@ -1,4 +1,6 @@
 import {
+  MessageDeleteRequestPayload,
+  MessageEditRequestPayload,
   MessageFetchRequestPayload,
   MessageReadRequestPayload,
   MessageSendRequestPayload,
@@ -19,6 +21,8 @@ export type UserListRequest = ApiRequest<'USER_LIST', UserListRequestPayload>;
 export type MessageSendRequest = ApiRequest<'MSG_SEND', MessageSendRequestPayload>;
 export type MessageFetchRequest = ApiRequest<'MSG_FROM_USER', MessageFetchRequestPayload>;
 export type MessageReadRequest = ApiRequest<'MSG_READ', MessageReadRequestPayload>;
+export type MessageEditRequest = ApiRequest<'MSG_EDIT', MessageEditRequestPayload>;
+export type MessageDeleteRequest = ApiRequest<'MSG_DELETE', MessageDeleteRequestPayload>;
 
 export type ChatApiRequest =
   | UserLoginRequest
@@ -26,4 +30,6 @@ export type ChatApiRequest =
   | UserListRequest
   | MessageFetchRequest
   | MessageSendRequest
+  | MessageEditRequest
+  | MessageDeleteRequest
   | MessageReadRequest;

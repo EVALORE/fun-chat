@@ -70,3 +70,23 @@ export interface MessageReadResponsePayload {
   id: string;
   isRead: boolean;
 }
+
+export interface MessageEditRequestPayload {
+  id: string;
+  text: string;
+}
+
+export interface MessageEditResponsePayload {
+  id: string;
+  text: string;
+  isEdited: boolean;
+}
+
+export interface MessageDeleteRequestPayload {
+  id: string;
+}
+
+export interface MessageDeleteResponsePayload {
+  id: string;
+  isDeleted: boolean;
+}
