@@ -21,15 +21,18 @@ import { MessageHandler } from './message-handler';
     DatePipe,
     TuiCell,
   ],
+  providers: [MessageHandler],
   templateUrl: './chat-dialog.html',
   styleUrl: './chat-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatDialog {
   private readonly ws = inject(WebSocketClient);
-  private readonly messageStore = new MessageHandler();
+  private readonly messageStore = inject(MessageHandler);
   public readonly receiver = input.required<User>();
   public userInput = '';
+  public originalMessageText = '';
+  public editingMessageId: string | null = null;
 
   public messages = this.messageStore.messages;
 
@@ -47,8 +50,39 @@ export class ChatDialog {
     if (this.userInput.length === 0) {
       return;
     }
-    this.ws.send('MSG_SEND', { to: this.receiver().login, text: this.userInput });
+
+    if (this.editingMessageId) {
+      this.ws.send('MSG_EDIT', { id: this.editingMessageId, text: this.userInput });
+      this.cancelEdit();
+    } else {
+      this.ws.send('MSG_SEND', { to: this.receiver().login, text: this.userInput });
+    }
+
     this.userInput = '';
+  }
+
+  public deleteMessage(id: string): void {
+    this.ws.send('MSG_DELETE', { id });
+  }
+
+  public startEdit(messageId: string, currentText: string): void {
+    this.editingMessageId = messageId;
+    this.originalMessageText = currentText;
+    this.userInput = currentText;
+  }
+
+  public cancelEdit(): void {
+    this.editingMessageId = null;
+    this.originalMessageText = '';
+    this.userInput = '';
+  }
+
+  public isEditingMode(): boolean {
+    return this.editingMessageId !== null;
+  }
+
+  public isMyMessage(message: { from: string }): boolean {
+    return message.from !== this.receiver().login;
   }
 
   public getStatusIcon(message: { isDelivered: boolean }): string {

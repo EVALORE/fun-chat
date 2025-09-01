@@ -15,6 +15,9 @@
       <div tuiSubtitle>
         <span>{{message.from}}</span> |
         <span>{{message.datetime | date: 'HH:mm'}}</span>
+        @if (message.isEdited) {
+        <span class="edited-label">(edited)</span>
+        }
         <tui-icon
           [style.font-size.rem]="1"
           [icon]="getStatusIcon(message)"
@@ -22,21 +25,59 @@
         />
       </div>
 
-      <div [appearance]="getMessageAppearance(message)" tuiMessage>{{message.text}}</div>
+      <div class="message-container">
+        <div
+          [appearance]="getMessageAppearance(message)"
+          tuiMessage
+          [class.editing]="editingMessageId === message.id"
+        >
+          {{message.text}}
+        </div>
+        @if (isMyMessage(message)) {
+        <div class="message-actions">
+          <tui-icon
+            icon="@tui.pen"
+            class="action-icon"
+            (click)="startEdit(message.id, message.text)"
+            title="Edit message"
+          />
+          <tui-icon
+            icon="@tui.trash"
+            class="action-icon delete-icon"
+            (click)="deleteMessage(message.id)"
+            title="Delete message"
+          />
+        </div>
+        }
+      </div>
     </div>
   </div>
   }
 </div>
 
 <div class="bottom">
+  @if (isEditingMode()) {
+  <div class="edit-indicator">
+    <div class="edit-header">
+      <span class="edit-title">Editing message</span>
+      <tui-icon icon="@tui.x" class="cancel-edit-icon" (click)="cancelEdit()" title="Cancel edit" />
+    </div>
+    <div class="original-message">
+      <span class="original-label">Original:</span>
+      <span class="original-text">{{originalMessageText}}</span>
+    </div>
+  </div>
+  }
+
   <tui-textfield>
     <input
       type="text"
       tuiTextfield
-      placeholder="Message"
+      [placeholder]="isEditingMode() ? 'Edit your message...' : 'Message'"
       [(ngModel)]="userInput"
       (keydown.enter)="send()"
+      (keydown.escape)="cancelEdit()"
     />
-    <tui-icon icon="@tui.send" (click)="send()" />
+    <tui-icon [icon]="isEditingMode() ? '@tui.check' : '@tui.send'" (click)="send()" />
   </tui-textfield>
 </div>

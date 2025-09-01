@@ -3,24 +3,58 @@ import { WebSocketClient } from '../../../core/api/web-socket-client';
 import { filter, merge, Observable, scan, switchMap, tap } from 'rxjs';
 import { Message } from '../../../core/message';
 import {
+  MessageDeleteResponsePayload,
   MessageDeliverResponsePayload,
+  MessageEditResponsePayload,
   MessageFetchResponsePayload,
   MessageReadResponsePayload,
   MessageSendResponsePayload,
 } from '../../../core/api/types/payloads';
 import { User } from '../../../core/user';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { ChatApiResponse } from '../../../core/api/types/response';
+
+type MessageType =
+  | 'MSG_FROM_USER'
+  | 'MSG_SEND'
+  | 'MSG_DELIVER'
+  | 'MSG_READ'
+  | 'MSG_EDIT'
+  | 'MSG_DELETE';
 
 @Injectable()
 export class MessageHandler {
   private readonly ws = inject(WebSocketClient);
-
   private currentReceiver = signal<User | null>(null);
+  private readonly messageHandlers: Record<
+    MessageType,
+    (
+      accumulator: Message[],
+      payload: ChatApiResponse['payload'],
+      receiverLogin: string,
+    ) => Message[]
+  >;
 
   public messages = toObservable(this.currentReceiver).pipe(
     filter((receiver) => receiver !== null),
     switchMap((receiver) => this.getMessagesForReceiver(receiver)),
   );
+
+  constructor() {
+    this.messageHandlers = {
+      MSG_FROM_USER: (_, payload): Message[] => (payload as MessageFetchResponsePayload).messages,
+      MSG_SEND: (accumulator, payload, receiverLogin): Message[] =>
+        this.handleMessageSend(accumulator, payload as MessageSendResponsePayload, receiverLogin),
+      MSG_DELIVER: (accumulator, payload): Message[] =>
+        this.handleMessageDeliver(accumulator, payload as MessageDeliverResponsePayload),
+      MSG_READ: (accumulator, payload): Message[] =>
+        this.handleMessageRead(accumulator, payload as MessageReadResponsePayload),
+      MSG_EDIT: (accumulator, payload): Message[] =>
+        this.handleMessageEdit(accumulator, payload as MessageEditResponsePayload),
+      MSG_DELETE: (accumulator, payload): Message[] =>
+        this.handleMessageDelete(accumulator, payload as MessageDeleteResponsePayload),
+    };
+  }
 
   public setReceiver(receiver: User): void {
     this.currentReceiver.set(receiver);
@@ -32,39 +66,41 @@ export class MessageHandler {
       this.ws.onType('MSG_SEND'),
       this.ws.onType('MSG_DELIVER'),
       this.ws.onType('MSG_READ'),
+      this.ws.onType('MSG_EDIT'),
+      this.ws.onType('MSG_DELETE'),
     ).pipe(
       tap((response) => {
-        const receiverLogin = receiver.login;
-        if (response.type === 'MSG_FROM_USER') {
-          this.handleUnreadMessages(response.payload, receiverLogin);
-        }
-        if (response.type === 'MSG_SEND') {
-          this.handleIncomingMessage(response.payload, receiverLogin);
-        }
+        this.handleSideEffects(response, receiver.login);
       }),
-      scan((accumulator, response): Message[] => {
-        const { type, payload } = response;
-        const receiverLogin = receiver.login;
-
-        switch (type) {
-          case 'MSG_FROM_USER': {
-            return payload.messages;
-          }
-          case 'MSG_SEND': {
-            return this.handleMessageSend(accumulator, payload, receiverLogin);
-          }
-          case 'MSG_DELIVER': {
-            return this.handleMessageDeliver(accumulator, payload);
-          }
-          case 'MSG_READ': {
-            return this.handleMessageRead(accumulator, payload);
-          }
-          default: {
-            return accumulator;
-          }
-        }
-      }, [] as Message[]),
+      scan(
+        (accumulator, response) => this.processMessage(accumulator, response, receiver),
+        [] as Message[],
+      ),
     );
+  }
+
+  private handleSideEffects(response: ChatApiResponse, receiverLogin: string): void {
+    if (response.type === 'MSG_FROM_USER') {
+      this.handleUnreadMessages(response.payload, receiverLogin);
+    }
+    if (response.type === 'MSG_SEND') {
+      this.handleIncomingMessage(response.payload, receiverLogin);
+    }
+  }
+
+  private processMessage(
+    accumulator: Message[],
+    response: ChatApiResponse,
+    receiver: User,
+  ): Message[] {
+    const { type, payload } = response;
+
+    if (type in this.messageHandlers) {
+      const handler = this.messageHandlers[type as MessageType];
+      return handler(accumulator, payload, receiver.login);
+    }
+
+    return accumulator;
   }
 
   private handleUnreadMessages(
@@ -115,5 +151,26 @@ export class MessageHandler {
     return accumulator.map((message) =>
       message.id === payload.id ? { ...message, isRead: true } : message,
     );
+  }
+
+  private handleMessageEdit(
+    accumulator: Message[],
+    payload: MessageEditResponsePayload,
+  ): Message[] {
+    return accumulator.map((message) =>
+      message.id === payload.id
+        ? { ...message, text: payload.text, isEdited: payload.isEdited }
+        : message,
+    );
+  }
+
+  private handleMessageDelete(
+    accumulator: Message[],
+    payload: MessageDeleteResponsePayload,
+  ): Message[] {
+    if (payload.isDeleted) {
+      return accumulator.filter((message) => message.id !== payload.id);
+    }
+    return accumulator;
   }
 }

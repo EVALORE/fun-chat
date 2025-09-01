@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { webSocket } from 'rxjs/webSocket';
 import { ChatApiRequest } from './types/request';
 import { ChatApiResponse, ErrorResponse } from './types/response';
-import { catchError, filter, Observable, of, retry, Subscription, tap, timer } from 'rxjs';
+import { catchError, filter, Observable, of, retry, Subscription, timer } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -51,9 +51,6 @@ export class WebSocketClient implements OnDestroy {
   ): Observable<Extract<ChatApiResponse, { type: T }>> {
     return this.socket$.pipe(
       filter((message): message is Extract<ChatApiResponse, { type: T }> => message.type === type),
-      tap((message) => {
-        console.log(message);
-      }),
     );
   }
 
