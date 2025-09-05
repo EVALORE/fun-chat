@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { WebSocketClient } from '../../../core/api/web-socket-client';
-import { filter, merge, Observable, scan, switchMap, tap } from 'rxjs';
+import { filter, merge, Observable, scan, shareReplay, switchMap, tap } from 'rxjs';
 import { Message } from '../../../core/message';
 import {
   MessageDeleteResponsePayload,
@@ -38,6 +38,7 @@ export class MessageHandler {
   public messages = toObservable(this.currentReceiver).pipe(
     filter((receiver) => receiver !== null),
     switchMap((receiver) => this.getMessagesForReceiver(receiver)),
+    shareReplay(1),
   );
 
   constructor() {
@@ -57,7 +58,10 @@ export class MessageHandler {
   }
 
   public setReceiver(receiver: User): void {
-    this.currentReceiver.set(receiver);
+    if (this.currentReceiver()?.login !== receiver.login) {
+      this.currentReceiver.set(receiver);
+      this.ws.send('MSG_FROM_USER', { login: receiver.login });
+    }
   }
 
   public getMessagesForReceiver(receiver: User): Observable<Message[]> {

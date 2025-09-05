@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, untracked } from '@angular/core';
 import { WebSocketClient } from './api/web-socket-client';
 import { RouterHandler } from './routing/router-handler';
 import { first } from 'rxjs';
@@ -28,7 +28,7 @@ export class Auth {
   }
 
   public logout(): void {
-    this.ws.send('USER_LOGOUT', { login: '' });
+    this.ws.send('USER_LOGOUT', { login: untracked(() => this.userStore.name()) });
 
     this.ws
       .onType('USER_LOGOUT')

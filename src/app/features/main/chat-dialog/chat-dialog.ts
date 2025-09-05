@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  ViewChild,
+} from '@angular/core';
 import { User } from '../../../core/user';
 import { TuiBadge, TuiMessage, TuiStatus } from '@taiga-ui/kit';
 import { TuiIcon, TuiTextfield } from '@taiga-ui/core';
@@ -7,6 +16,7 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TuiCell } from '@taiga-ui/layout';
 import { MessageHandler } from './message-handler';
+import { Message } from '../../../core/message';
 
 @Component({
   selector: 'app-user-dialog',
@@ -26,7 +36,9 @@ import { MessageHandler } from './message-handler';
   styleUrl: './chat-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChatDialog {
+export class ChatDialog implements AfterViewInit {
+  @ViewChild('conversationContainer') private conversationContainer!: ElementRef<HTMLDivElement>;
+
   private readonly ws = inject(WebSocketClient);
   private readonly messageStore = inject(MessageHandler);
   public readonly receiver = input.required<User>();
@@ -38,11 +50,21 @@ export class ChatDialog {
 
   constructor() {
     effect(() => {
-      this.ws.send('MSG_FROM_USER', { login: this.receiver().login });
+      this.messageStore.setReceiver(this.receiver());
     });
 
     effect(() => {
-      this.messageStore.setReceiver(this.receiver());
+      const subscription = this.messages.subscribe((messageList) => {
+        if (messageList.length > 0) {
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 0);
+        }
+      });
+
+      return (): void => {
+        subscription.unsubscribe();
+      };
     });
   }
 
@@ -59,6 +81,11 @@ export class ChatDialog {
     }
 
     this.userInput = '';
+  }
+
+  private scrollToBottom(): void {
+    const element = this.conversationContainer.nativeElement;
+    element.scrollTop = element.scrollHeight;
   }
 
   public deleteMessage(id: string): void {
@@ -91,5 +118,19 @@ export class ChatDialog {
 
   public getMessageAppearance(message: { from: string }): string {
     return message.from === this.receiver().login ? 'neutral' : 'accent';
+  }
+
+  public shouldShowUnreadDivider(
+    message: Message,
+    hasShownDivider: boolean,
+  ): { showDivider: boolean; newToggleState: boolean } {
+    const isUnread = message.from === this.receiver().login && !message.isRead;
+    const showDivider = isUnread && !hasShownDivider;
+    const newToggleState = hasShownDivider || showDivider;
+    return { showDivider, newToggleState };
+  }
+
+  public ngAfterViewInit(): void {
+    this.scrollToBottom();
   }
 }

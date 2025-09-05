@@ -1,72 +1,96 @@
 <div class="top">
-  <span>{{receiver().login}}</span>
+  <span>{{ receiver().login }}</span>
   @if (receiver().isOnline) {
-  <tui-badge appearance="positive" tuiStatus>Online</tui-badge>
+    <tui-badge appearance="positive" tuiStatus>Online</tui-badge>
   } @else {
-  <tui-badge appearance="neutral" tuiStatus>Offline</tui-badge>
+    <tui-badge appearance="neutral" tuiStatus>Offline</tui-badge>
   }
 </div>
 
-<div class="conversation">
-  @for (message of messages | async; track message.id) {
-
-  <div tuiCell="s">
-    <div>
-      <div tuiSubtitle>
-        <span>{{message.from}}</span> |
-        <span>{{message.datetime | date: 'HH:mm'}}</span>
-        @if (message.isEdited) {
-        <span class="edited-label">(edited)</span>
-        }
-        <tui-icon
-          [style.font-size.rem]="1"
-          [icon]="getStatusIcon(message)"
-          [style.color]="message.isRead?'var(--tui-background-accent-1)' : ''"
-        />
-      </div>
-
-      <div class="message-container">
-        <div
-          [appearance]="getMessageAppearance(message)"
-          tuiMessage
-          [class.editing]="editingMessageId === message.id"
-        >
-          {{message.text}}
-        </div>
-        @if (isMyMessage(message)) {
-        <div class="message-actions">
-          <tui-icon
-            icon="@tui.pen"
-            class="action-icon"
-            (click)="startEdit(message.id, message.text)"
-            title="Edit message"
-          />
-          <tui-icon
-            icon="@tui.trash"
-            class="action-icon delete-icon"
-            (click)="deleteMessage(message.id)"
-            title="Delete message"
-          />
-        </div>
-        }
+<div class="conversation" #conversationContainer>
+  @if ((messages | async)?.length === 0) {
+    <div class="placeholder-container">
+      <div class="placeholder-content">
+        <tui-icon icon="@tui.message-square" class="placeholder-icon" />
+        <span class="placeholder-text">Beginning of conversation</span>
       </div>
     </div>
-  </div>
+  } @else {
+    @let dividerShown = true;
+    @for (message of messages | async; track message.id) {
+      @if (dividerShown && message.from === receiver().login && !message.isRead) {
+        <div class="unread-divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">New messages</span>
+          <div class="divider-line"></div>
+        </div>
+        @let dividerShown = false;
+      }
+
+      <div tuiCell="s">
+        <div>
+          <div tuiSubtitle>
+            <span>{{ message.from }}</span>
+            |
+            <span>{{ message.datetime | date: 'HH:mm' }}</span>
+            @if (message.isEdited) {
+              <span class="edited-label">(edited)</span>
+            }
+            <tui-icon
+              [style.font-size.rem]="1"
+              [icon]="getStatusIcon(message)"
+              [style.color]="message.isRead ? 'var(--tui-background-accent-1)' : ''"
+            />
+          </div>
+
+          <div class="message-container">
+            <div
+              [appearance]="getMessageAppearance(message)"
+              tuiMessage
+              [class.editing]="editingMessageId === message.id"
+            >
+              {{ message.text }}
+            </div>
+            @if (isMyMessage(message)) {
+              <div class="message-actions">
+                <tui-icon
+                  icon="@tui.pen"
+                  class="action-icon"
+                  (click)="startEdit(message.id, message.text)"
+                  title="Edit message"
+                />
+                <tui-icon
+                  icon="@tui.trash"
+                  class="action-icon delete-icon"
+                  (click)="deleteMessage(message.id)"
+                  title="Delete message"
+                />
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
   }
 </div>
 
 <div class="bottom">
   @if (isEditingMode()) {
-  <div class="edit-indicator">
-    <div class="edit-header">
-      <span class="edit-title">Editing message</span>
-      <tui-icon icon="@tui.x" class="cancel-edit-icon" (click)="cancelEdit()" title="Cancel edit" />
+    <div class="edit-indicator">
+      <div class="edit-header">
+        <span class="edit-title">Editing message</span>
+        <tui-icon
+          icon="@tui.x"
+          class="cancel-edit-icon"
+          (click)="cancelEdit()"
+          title="Cancel edit"
+        />
+      </div>
+      <div class="original-message">
+        <span class="original-label">Original:</span>
+        <span class="original-text">{{ originalMessageText }}</span>
+      </div>
     </div>
-    <div class="original-message">
-      <span class="original-label">Original:</span>
-      <span class="original-text">{{originalMessageText}}</span>
-    </div>
-  </div>
   }
 
   <tui-textfield>

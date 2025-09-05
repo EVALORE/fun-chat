@@ -5,5 +5,5 @@ import { UserStore } from '../user-store';
 export const loginGuard: CanMatchFn = () => {
   const user = inject(UserStore);
   const router = inject(Router);
-  return untracked(user.isLogged) ? router.createUrlTree(['']) : true;
+  return untracked(() => user.isOnline()) ? router.createUrlTree(['']) : true;
 };

@@ -1,4 +1,12 @@
 <app-user-list (selectedUser)="receiver.set($event)" />
 @if (receiver(); as user) {
 <app-user-dialog [receiver]="user" />
+} @else {
+<div class="placeholder-container">
+  <div class="placeholder-content">
+    <tui-icon icon="@tui.message-circle" class="placeholder-icon" />
+    <span class="placeholder-text">Select chat with</span>
+  </div>
+</div>
+
 }

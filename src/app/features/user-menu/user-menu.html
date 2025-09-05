@@ -1,4 +1,5 @@
-@if (user.isLogged()) {
+@if (user.isOnline()) {
+<button tuiButton (click)="logout()">logout</button>
 <span>{{ user.name() }}</span>
 <tui-avatar src="@tui.user" size="m" />
 }
