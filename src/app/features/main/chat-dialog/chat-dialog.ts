@@ -16,7 +16,6 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TuiCell } from '@taiga-ui/layout';
 import { MessageHandler } from './message-handler';
-import { Message } from '../../../core/message';
 
 @Component({
   selector: 'app-user-dialog',
@@ -46,7 +45,10 @@ export class ChatDialog implements AfterViewInit {
   public originalMessageText = '';
   public editingMessageId: string | null = null;
 
-  public messages = this.messageStore.messages;
+  public readonly oldMessages = this.messageStore.oldMessages$;
+  public readonly newMessages = this.messageStore.newMessages$;
+  public readonly showDivider = this.messageStore.showDivider;
+  public readonly isEmpty = this.messageStore.isEmpty$;
 
   constructor() {
     effect(() => {
@@ -54,7 +56,7 @@ export class ChatDialog implements AfterViewInit {
     });
 
     effect(() => {
-      const subscription = this.messages.subscribe((messageList) => {
+      const subscription = this.oldMessages.subscribe((messageList) => {
         if (messageList.length > 0) {
           setTimeout(() => {
             this.scrollToBottom();
@@ -118,16 +120,6 @@ export class ChatDialog implements AfterViewInit {
 
   public getMessageAppearance(message: { from: string }): string {
     return message.from === this.receiver().login ? 'neutral' : 'accent';
-  }
-
-  public shouldShowUnreadDivider(
-    message: Message,
-    hasShownDivider: boolean,
-  ): { showDivider: boolean; newToggleState: boolean } {
-    const isUnread = message.from === this.receiver().login && !message.isRead;
-    const showDivider = isUnread && !hasShownDivider;
-    const newToggleState = hasShownDivider || showDivider;
-    return { showDivider, newToggleState };
   }
 
   public ngAfterViewInit(): void {

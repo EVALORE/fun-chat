@@ -1,7 +1,10 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { WebSocketClient } from '../../../core/api/web-socket-client';
-import { filter, merge, Observable, scan, shareReplay, switchMap, tap } from 'rxjs';
+import { filter, map, merge, Observable, scan, shareReplay, startWith, switchMap, tap } from 'rxjs';
 import { Message } from '../../../core/message';
+import { User } from '../../../core/user';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { ChatApiResponse } from '../../../core/api/types/response';
 import {
   MessageDeleteResponsePayload,
   MessageDeliverResponsePayload,
@@ -10,93 +13,188 @@ import {
   MessageReadResponsePayload,
   MessageSendResponsePayload,
 } from '../../../core/api/types/payloads';
-import { User } from '../../../core/user';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { ChatApiResponse } from '../../../core/api/types/response';
 
-type MessageType =
-  | 'MSG_FROM_USER'
-  | 'MSG_SEND'
-  | 'MSG_DELIVER'
-  | 'MSG_READ'
-  | 'MSG_EDIT'
-  | 'MSG_DELETE';
+type MessageType = 'MSG_SEND' | 'MSG_DELIVER' | 'MSG_READ' | 'MSG_EDIT' | 'MSG_DELETE';
+
+interface DialogState {
+  oldMessages: Message[];
+  newMessages: Message[];
+  showDivider: boolean;
+  isEmpty: boolean;
+  mergeNew: boolean;
+}
+
+type MessageHandlers = Record<
+  MessageType,
+  (
+    accumulator: DialogState,
+    payload: ChatApiResponse['payload'],
+    receiverLogin: string,
+  ) => DialogState
+>;
 
 @Injectable()
 export class MessageHandler {
   private readonly ws = inject(WebSocketClient);
   private currentReceiver = signal<User | null>(null);
-  private readonly messageHandlers: Record<
-    MessageType,
-    (
-      accumulator: Message[],
-      payload: ChatApiResponse['payload'],
-      receiverLogin: string,
-    ) => Message[]
-  >;
+  private readonly messageHandlers: MessageHandlers = {
+    MSG_DELETE: (accumulator, payload) =>
+      this.deleteMessage(accumulator, payload as MessageDeleteResponsePayload),
+    MSG_DELIVER: (accumulator, payload) =>
+      this.deliverMessage(accumulator, payload as MessageDeliverResponsePayload),
+    MSG_EDIT: (accumulator, payload) =>
+      this.editMessage(accumulator, payload as MessageEditResponsePayload),
+    MSG_READ: (accumulator, payload) =>
+      this.readMessage(accumulator, payload as MessageReadResponsePayload),
+    MSG_SEND: (accumulator, payload, receiverLogin) =>
+      this.sendMessage(accumulator, payload as MessageSendResponsePayload, receiverLogin),
+  };
 
-  public messages = toObservable(this.currentReceiver).pipe(
+  private messageState = toObservable(this.currentReceiver).pipe(
     filter((receiver) => receiver !== null),
     switchMap((receiver) => this.getMessagesForReceiver(receiver)),
     shareReplay(1),
   );
 
-  constructor() {
-    this.messageHandlers = {
-      MSG_FROM_USER: (_, payload): Message[] => (payload as MessageFetchResponsePayload).messages,
-      MSG_SEND: (accumulator, payload, receiverLogin): Message[] =>
-        this.handleMessageSend(accumulator, payload as MessageSendResponsePayload, receiverLogin),
-      MSG_DELIVER: (accumulator, payload): Message[] =>
-        this.handleMessageDeliver(accumulator, payload as MessageDeliverResponsePayload),
-      MSG_READ: (accumulator, payload): Message[] =>
-        this.handleMessageRead(accumulator, payload as MessageReadResponsePayload),
-      MSG_EDIT: (accumulator, payload): Message[] =>
-        this.handleMessageEdit(accumulator, payload as MessageEditResponsePayload),
-      MSG_DELETE: (accumulator, payload): Message[] =>
-        this.handleMessageDelete(accumulator, payload as MessageDeleteResponsePayload),
-    };
-  }
+  public oldMessages$ = this.messageState.pipe(map((state) => state.oldMessages));
+  public newMessages$ = this.messageState.pipe(map((state) => state.newMessages));
+  public showDivider = this.messageState.pipe(map((state) => state.showDivider));
+  public isEmpty$ = this.messageState.pipe(map((state) => state.isEmpty));
 
   public setReceiver(receiver: User): void {
     if (this.currentReceiver()?.login !== receiver.login) {
       this.currentReceiver.set(receiver);
-      this.ws.send('MSG_FROM_USER', { login: receiver.login });
     }
   }
 
-  public getMessagesForReceiver(receiver: User): Observable<Message[]> {
-    return merge(
-      this.ws.onType('MSG_FROM_USER'),
+  private deleteMessage(
+    accumulator: DialogState,
+    payload: MessageDeleteResponsePayload,
+  ): DialogState {
+    return {
+      ...accumulator,
+      oldMessages: accumulator.oldMessages.filter((message) => message.id !== payload.id),
+    };
+  }
+
+  private deliverMessage(
+    accumulator: DialogState,
+    payload: MessageDeliverResponsePayload,
+  ): DialogState {
+    return {
+      ...accumulator,
+      oldMessages: accumulator.oldMessages.map((message) =>
+        message.id === payload.id ? { ...message, ...payload } : message,
+      ),
+    };
+  }
+
+  private editMessage(accumulator: DialogState, payload: MessageEditResponsePayload): DialogState {
+    return {
+      ...accumulator,
+      oldMessages: accumulator.oldMessages.map((message) =>
+        message.id === payload.id ? { ...message, ...payload } : message,
+      ),
+      newMessages: accumulator.newMessages.map((message) =>
+        message.id === payload.id ? { ...message, ...payload } : message,
+      ),
+    };
+  }
+
+  private readMessage(accumulator: DialogState, payload: MessageReadResponsePayload): DialogState {
+    return {
+      ...accumulator,
+      newMessages: accumulator.newMessages.map((message) =>
+        message.id === payload.id ? { ...message, ...payload } : message,
+      ),
+    };
+  }
+
+  private sendMessage(
+    accumulator: DialogState,
+    payload: MessageSendResponsePayload,
+    receiverLogin: string,
+  ): DialogState {
+    const isFromReceiver = payload.from === receiverLogin;
+
+    if (isFromReceiver) {
+      this.ws.send('MSG_READ', { id: payload.id });
+
+      if (accumulator.mergeNew) {
+        return {
+          ...accumulator,
+          oldMessages: [...accumulator.oldMessages, payload],
+          isEmpty: false,
+          showDivider: false,
+        };
+      }
+
+      return {
+        ...accumulator,
+        newMessages: [...accumulator.newMessages, payload],
+        isEmpty: false,
+        showDivider: true,
+      };
+    }
+
+    return {
+      oldMessages: [...accumulator.oldMessages, ...accumulator.newMessages, payload],
+      newMessages: [],
+      isEmpty: false,
+      showDivider: false,
+      mergeNew: true,
+    };
+  }
+
+  private handleInitialMessages({ messages }: MessageFetchResponsePayload): DialogState {
+    const oldMessages = messages.filter((message: Message) => message.isRead);
+    const newMessages = messages.filter((message: Message) => !message.isRead);
+
+    return {
+      oldMessages,
+      newMessages,
+      isEmpty: oldMessages.length + newMessages.length === 0,
+      showDivider: newMessages.length > 0,
+      mergeNew: false,
+    };
+  }
+
+  public getMessagesForReceiver(receiver: User): Observable<DialogState> {
+    this.ws.send('MSG_FROM_USER', { login: receiver.login });
+
+    const initialMessages$ = this.ws
+      .onType('MSG_FROM_USER')
+      .pipe(map(({ payload }) => this.handleInitialMessages(payload)));
+
+    const updateMessages$ = merge(
       this.ws.onType('MSG_SEND'),
       this.ws.onType('MSG_DELIVER'),
       this.ws.onType('MSG_READ'),
       this.ws.onType('MSG_EDIT'),
       this.ws.onType('MSG_DELETE'),
-    ).pipe(
-      tap((response) => {
-        this.handleSideEffects(response, receiver.login);
+    );
+
+    return initialMessages$.pipe(
+      tap((state) => {
+        this.sendReadForNewMessages(state, receiver.login);
       }),
-      scan(
-        (accumulator, response) => this.processMessage(accumulator, response, receiver),
-        [] as Message[],
+      switchMap((initialState) =>
+        updateMessages$.pipe(
+          scan(
+            (accumulator, response) => this.processMessage(accumulator, response, receiver),
+            initialState,
+          ),
+          startWith(initialState),
+        ),
       ),
     );
   }
 
-  private handleSideEffects(response: ChatApiResponse, receiverLogin: string): void {
-    if (response.type === 'MSG_FROM_USER') {
-      this.handleUnreadMessages(response.payload, receiverLogin);
-    }
-    if (response.type === 'MSG_SEND') {
-      this.handleIncomingMessage(response.payload, receiverLogin);
-    }
-  }
-
   private processMessage(
-    accumulator: Message[],
+    accumulator: DialogState,
     response: ChatApiResponse,
     receiver: User,
-  ): Message[] {
+  ): DialogState {
     const { type, payload } = response;
 
     if (type in this.messageHandlers) {
@@ -107,74 +205,12 @@ export class MessageHandler {
     return accumulator;
   }
 
-  private handleUnreadMessages(
-    { messages }: MessageFetchResponsePayload,
-    receiverLogin: string,
-  ): void {
-    const unread = messages.filter((message) => message.from === receiverLogin && !message.isRead);
-    if (unread.length > 0) {
-      for (const message of unread) {
-        this.ws.send('MSG_READ', { id: message.id });
-      }
-    }
-  }
-
-  private handleIncomingMessage(
-    { from, id }: MessageSendResponsePayload,
-    receiverLogin: string,
-  ): void {
-    if (from === receiverLogin) {
-      this.ws.send('MSG_READ', { id });
-    }
-  }
-
-  private handleMessageSend(
-    accumulator: Message[],
-    message: MessageSendResponsePayload,
-    receiverLogin: string,
-  ): Message[] {
-    if (message.from === receiverLogin || message.to === receiverLogin) {
-      return [...accumulator, message];
-    }
-    return accumulator;
-  }
-
-  private handleMessageDeliver(
-    accumulator: Message[],
-    payload: MessageDeliverResponsePayload,
-  ): Message[] {
-    return accumulator.map((message) =>
-      message.id === payload.id ? { ...message, isDelivered: true } : message,
+  private sendReadForNewMessages(state: DialogState, receiverLogin: string): void {
+    const newMessagesFromReceiver = state.newMessages.filter(
+      (message) => !message.isRead && message.from === receiverLogin,
     );
-  }
-
-  private handleMessageRead(
-    accumulator: Message[],
-    payload: MessageReadResponsePayload,
-  ): Message[] {
-    return accumulator.map((message) =>
-      message.id === payload.id ? { ...message, isRead: true } : message,
-    );
-  }
-
-  private handleMessageEdit(
-    accumulator: Message[],
-    payload: MessageEditResponsePayload,
-  ): Message[] {
-    return accumulator.map((message) =>
-      message.id === payload.id
-        ? { ...message, text: payload.text, isEdited: payload.isEdited }
-        : message,
-    );
-  }
-
-  private handleMessageDelete(
-    accumulator: Message[],
-    payload: MessageDeleteResponsePayload,
-  ): Message[] {
-    if (payload.isDeleted) {
-      return accumulator.filter((message) => message.id !== payload.id);
+    for (const message of newMessagesFromReceiver) {
+      this.ws.send('MSG_READ', { id: message.id });
     }
-    return accumulator;
   }
 }
