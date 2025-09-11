@@ -1,0 +1,29 @@
+<div tuiCell="s">
+  <div>
+    <div tuiSubtitle>
+      <span>{{ message().from }}</span>
+      |
+      <span>{{ message().datetime | date: 'HH:mm' }}</span>
+      @if (message().isEdited) {
+        <span class="edited-label">(edited)</span>
+      }
+      <tui-icon
+        [style.font-size.rem]="1"
+        [icon]="statusIcon"
+        [style.color]="message().isRead ? 'var(--tui-background-accent-1)' : ''"
+      />
+    </div>
+
+    <div>
+      <div [appearance]="appearance" tuiMessage [class.editing]="editing()">
+        {{ message().text }}
+      </div>
+      @if (isOwn()) {
+        <div>
+          <tui-icon icon="@tui.pen" (click)="onEdit()" title="Edit message" />
+          <tui-icon icon="@tui.trash" (click)="onDelete()" title="Delete message" />
+        </div>
+      }
+    </div>
+  </div>
+</div>

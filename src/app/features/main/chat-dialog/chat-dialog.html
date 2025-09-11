@@ -16,101 +16,30 @@
       </div>
     </div>
   } @else {
-    @for (message of oldMessages | async; track message.id) {
-      <div tuiCell="s">
-        <div>
-          <div tuiSubtitle>
-            <span>{{ message.from }}</span>
-            |
-            <span>{{ message.datetime | date: 'HH:mm' }}</span>
-            @if (message.isEdited) {
-              <span class="edited-label">(edited)</span>
-            }
-            <tui-icon
-              [style.font-size.rem]="1"
-              [icon]="getStatusIcon(message)"
-              [style.color]="message.isRead ? 'var(--tui-background-accent-1)' : ''"
-            />
-          </div>
+    @let oldList = (oldMessages | async) ?? [];
+    @let newList = (newMessages | async) ?? [];
 
-          <div class="message-container">
-            <div
-              [appearance]="getMessageAppearance(message)"
-              tuiMessage
-              [class.editing]="editingMessageId === message.id"
-            >
-              {{ message.text }}
-            </div>
-            @if (isMyMessage(message)) {
-              <div class="message-actions">
-                <tui-icon
-                  icon="@tui.pen"
-                  class="action-icon"
-                  (click)="startEdit(message.id, message.text)"
-                  title="Edit message"
-                />
-                <tui-icon
-                  icon="@tui.trash"
-                  class="action-icon delete-icon"
-                  (click)="deleteMessage(message.id)"
-                  title="Delete message"
-                />
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-    }
+    <app-message-list
+      [messages]="oldList"
+      [receiverLogin]="receiver().login"
+      [editingMessageId]="editingMessageId"
+      (edit)="startEdit($event.id, $event.text)"
+      (delete)="deleteMessage($event)"
+    />
+
     @if (showDivider | async) {
       <div class="unread-divider">
         <span class="divider-text">New messages</span>
       </div>
     }
-    @for (message of newMessages | async; track message.id) {
-      <div tuiCell="s">
-        <div>
-          <div tuiSubtitle>
-            <span>{{ message.from }}</span>
-            |
-            <span>{{ message.datetime | date: 'HH:mm' }}</span>
-            @if (message.isEdited) {
-              <span class="edited-label">(edited)</span>
-            }
-            <tui-icon
-              [style.font-size.rem]="1"
-              [icon]="getStatusIcon(message)"
-              [style.color]="message.isRead ? 'var(--tui-background-accent-1)' : ''"
-            />
-          </div>
 
-          <div class="message-container">
-            <div
-              [appearance]="getMessageAppearance(message)"
-              tuiMessage
-              [class.editing]="editingMessageId === message.id"
-            >
-              {{ message.text }}
-            </div>
-            @if (isMyMessage(message)) {
-              <div class="message-actions">
-                <tui-icon
-                  icon="@tui.pen"
-                  class="action-icon"
-                  (click)="startEdit(message.id, message.text)"
-                  title="Edit message"
-                />
-                <tui-icon
-                  icon="@tui.trash"
-                  class="action-icon delete-icon"
-                  (click)="deleteMessage(message.id)"
-                  title="Delete message"
-                />
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-    }
+    <app-message-list
+      [messages]="newList"
+      [receiverLogin]="receiver().login"
+      [editingMessageId]="editingMessageId"
+      (edit)="startEdit($event.id, $event.text)"
+      (delete)="deleteMessage($event)"
+    />
   }
 </div>
 

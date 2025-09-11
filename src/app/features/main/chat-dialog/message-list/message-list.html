@@ -1,0 +1,9 @@
+@for (message of messages(); track message.id) {
+  <app-message-item
+    [message]="message"
+    [isOwn]="isOwn(message)"
+    [editing]="editingMessageId() === message.id"
+    (edit)="edit.emit($event)"
+    (delete)="delete.emit($event)"
+  />
+}

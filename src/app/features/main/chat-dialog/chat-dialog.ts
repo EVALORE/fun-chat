@@ -9,27 +9,17 @@ import {
   ViewChild,
 } from '@angular/core';
 import { User } from '../../../core/user';
-import { TuiBadge, TuiMessage, TuiStatus } from '@taiga-ui/kit';
+import { TuiBadge, TuiStatus } from '@taiga-ui/kit';
 import { TuiIcon, TuiTextfield } from '@taiga-ui/core';
 import { WebSocketClient } from '../../../core/api/web-socket-client';
-import { AsyncPipe, DatePipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TuiCell } from '@taiga-ui/layout';
 import { MessageHandler } from './message-handler';
+import { MessageList } from './message-list/message-list';
 
 @Component({
   selector: 'app-user-dialog',
-  imports: [
-    TuiBadge,
-    TuiStatus,
-    TuiTextfield,
-    TuiIcon,
-    TuiMessage,
-    AsyncPipe,
-    FormsModule,
-    DatePipe,
-    TuiCell,
-  ],
+  imports: [TuiBadge, TuiStatus, TuiTextfield, TuiIcon, AsyncPipe, FormsModule, MessageList],
   providers: [MessageHandler],
   templateUrl: './chat-dialog.html',
   styleUrl: './chat-dialog.scss',
@@ -108,18 +98,6 @@ export class ChatDialog implements AfterViewInit {
 
   public isEditingMode(): boolean {
     return this.editingMessageId !== null;
-  }
-
-  public isMyMessage(message: { from: string }): boolean {
-    return message.from !== this.receiver().login;
-  }
-
-  public getStatusIcon(message: { isDelivered: boolean }): string {
-    return message.isDelivered ? '@tui.check-check' : '@tui.check';
-  }
-
-  public getMessageAppearance(message: { from: string }): string {
-    return message.from === this.receiver().login ? 'neutral' : 'accent';
   }
 
   public ngAfterViewInit(): void {
