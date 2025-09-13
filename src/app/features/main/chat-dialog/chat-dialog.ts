@@ -14,42 +14,43 @@ import { TuiIcon, TuiTextfield } from '@taiga-ui/core';
 import { WebSocketClient } from '../../../core/api/web-socket-client';
 import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MessageHandler } from './message-handler';
+import { MessagesHandler } from './messages-handler';
 import { MessageList } from './message-list/message-list';
 
 @Component({
   selector: 'app-user-dialog',
   imports: [TuiBadge, TuiStatus, TuiTextfield, TuiIcon, AsyncPipe, FormsModule, MessageList],
-  providers: [MessageHandler],
+  providers: [MessagesHandler],
   templateUrl: './chat-dialog.html',
   styleUrl: './chat-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatDialog implements AfterViewInit {
   @ViewChild('conversationContainer') private conversationContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('unreadDivider') private unreadDivider: ElementRef<HTMLInputElement> | undefined;
 
   private readonly ws = inject(WebSocketClient);
-  private readonly messageStore = inject(MessageHandler);
+  private readonly messagesHandler = inject(MessagesHandler);
   public readonly receiver = input.required<User>();
   public userInput = '';
   public originalMessageText = '';
   public editingMessageId: string | null = null;
 
-  public readonly oldMessages = this.messageStore.oldMessages$;
-  public readonly newMessages = this.messageStore.newMessages$;
-  public readonly showDivider = this.messageStore.showDivider;
-  public readonly isEmpty = this.messageStore.isEmpty$;
+  public readonly oldMessages = this.messagesHandler.oldMessages$;
+  public readonly newMessages = this.messagesHandler.newMessages$;
+  public readonly showDivider = this.messagesHandler.showDivider;
+  public readonly isEmpty = this.messagesHandler.isEmpty$;
 
   constructor() {
     effect(() => {
-      this.messageStore.setReceiver(this.receiver());
+      this.messagesHandler.setReceiver(this.receiver());
     });
 
     effect(() => {
       const subscription = this.oldMessages.subscribe((messageList) => {
         if (messageList.length > 0) {
           setTimeout(() => {
-            this.scrollToBottom();
+            this.adjustInitialScroll();
           }, 0);
         }
       });
@@ -80,6 +81,23 @@ export class ChatDialog implements AfterViewInit {
     element.scrollTop = element.scrollHeight;
   }
 
+  private adjustInitialScroll(): void {
+    const container = this.conversationContainer.nativeElement;
+
+    const dividerElement = this.unreadDivider?.nativeElement;
+    const canScroll = container.scrollHeight > container.clientHeight;
+
+    if (dividerElement && canScroll) {
+      const dividerOffsetTop = dividerElement.offsetTop;
+      const target =
+        dividerOffsetTop - container.clientHeight / 2 + dividerElement.clientHeight / 2;
+
+      container.scrollTop = Math.max(0, Math.min(target, container.scrollHeight));
+    } else {
+      this.scrollToBottom();
+    }
+  }
+
   public deleteMessage(id: string): void {
     this.ws.send('MSG_DELETE', { id });
   }
@@ -101,6 +119,17 @@ export class ChatDialog implements AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    this.scrollToBottom();
+    this.adjustInitialScroll();
+  }
+
+  public onScroll(): void {
+    const element = this.conversationContainer.nativeElement;
+
+    const threshold = 8;
+    const atBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - threshold;
+
+    if (atBottom) {
+      this.messagesHandler.mergeMessages();
+    }
   }
 }

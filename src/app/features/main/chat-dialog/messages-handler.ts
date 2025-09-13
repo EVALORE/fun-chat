@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { WebSocketClient } from '../../../core/api/web-socket-client';
-import { filter, map, merge, Observable, scan, shareReplay, startWith, switchMap, tap } from 'rxjs';
+import { filter, map, merge, Observable, scan, shareReplay, startWith, Subject, switchMap, tap, } from 'rxjs';
 import { Message } from '../../../core/message';
 import { User } from '../../../core/user';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -24,6 +24,8 @@ interface DialogState {
   mergeNew: boolean;
 }
 
+type Reducer = (state: DialogState) => DialogState;
+
 type MessageHandlers = Record<
   MessageType,
   (
@@ -34,9 +36,12 @@ type MessageHandlers = Record<
 >;
 
 @Injectable()
-export class MessageHandler {
+export class MessagesHandler {
   private readonly ws = inject(WebSocketClient);
   private currentReceiver = signal<User | null>(null);
+
+  private readonly mergeNew$ = new Subject<void>();
+
   private readonly messageHandlers: MessageHandlers = {
     MSG_DELETE: (accumulator, payload) =>
       this.deleteMessage(accumulator, payload as MessageDeleteResponsePayload),
@@ -137,13 +142,7 @@ export class MessageHandler {
       };
     }
 
-    return {
-      oldMessages: [...accumulator.oldMessages, ...accumulator.newMessages, payload],
-      newMessages: [],
-      isEmpty: false,
-      showDivider: false,
-      mergeNew: true,
-    };
+    return this.moveNewMessagesToOld(accumulator, [payload]);
   }
 
   private handleInitialMessages({ messages }: MessageFetchResponsePayload): DialogState {
@@ -162,32 +161,40 @@ export class MessageHandler {
   public getMessagesForReceiver(receiver: User): Observable<DialogState> {
     this.ws.send('MSG_FROM_USER', { login: receiver.login });
 
-    const initialMessages$ = this.ws
+    const initial$ = this.ws
       .onType('MSG_FROM_USER')
       .pipe(map(({ payload }) => this.handleInitialMessages(payload)));
 
-    const updateMessages$ = merge(
+    const reducers$ = merge(this.wsReducers(receiver), this.uiReducers());
+
+    return initial$.pipe(
+      tap((state) => {
+        this.sendReadForNewMessages(state, receiver.login);
+      }),
+      switchMap((initialState) =>
+        reducers$.pipe(
+          scan((state, reducer) => reducer(state), initialState),
+          startWith(initialState),
+        ),
+      ),
+    );
+  }
+
+  private wsReducers(receiver: User): Observable<Reducer> {
+    const updates$ = merge(
       this.ws.onType('MSG_SEND'),
       this.ws.onType('MSG_DELIVER'),
       this.ws.onType('MSG_READ'),
       this.ws.onType('MSG_EDIT'),
       this.ws.onType('MSG_DELETE'),
     );
-
-    return initialMessages$.pipe(
-      tap((state) => {
-        this.sendReadForNewMessages(state, receiver.login);
-      }),
-      switchMap((initialState) =>
-        updateMessages$.pipe(
-          scan(
-            (accumulator, response) => this.processMessage(accumulator, response, receiver),
-            initialState,
-          ),
-          startWith(initialState),
-        ),
-      ),
+    return updates$.pipe(
+      map((response) => (state: DialogState) => this.processMessage(state, response, receiver)),
     );
+  }
+
+  private uiReducers(): Observable<Reducer> {
+    return this.mergeNew$.pipe(map(() => (state: DialogState) => this.moveNewMessagesToOld(state)));
   }
 
   private processMessage(
@@ -212,5 +219,19 @@ export class MessageHandler {
     for (const message of newMessagesFromReceiver) {
       this.ws.send('MSG_READ', { id: message.id });
     }
+  }
+
+  private moveNewMessagesToOld(state: DialogState, extraOldMessages: Message[] = []): DialogState {
+    return {
+      oldMessages: [...state.oldMessages, ...state.newMessages, ...extraOldMessages],
+      newMessages: [],
+      isEmpty: false,
+      showDivider: false,
+      mergeNew: true,
+    };
+  }
+
+  public mergeMessages(): void {
+    this.mergeNew$.next();
   }
 }

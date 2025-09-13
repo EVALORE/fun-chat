@@ -7,7 +7,7 @@
   }
 </div>
 
-<div class="conversation" #conversationContainer>
+<div class="conversation" #conversationContainer (scroll)="onScroll()">
   @if (isEmpty | async) {
     <div class="placeholder-container">
       <div class="placeholder-content">
@@ -28,7 +28,7 @@
     />
 
     @if (showDivider | async) {
-      <div class="unread-divider">
+      <div class="unread-divider" #unreadDivider>
         <span class="divider-text">New messages</span>
       </div>
     }
