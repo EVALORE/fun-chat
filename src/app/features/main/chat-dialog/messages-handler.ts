@@ -112,6 +112,9 @@ export class MessagesHandler {
       newMessages: accumulator.newMessages.map((message) =>
         message.id === payload.id ? { ...message, ...payload } : message,
       ),
+      oldMessages: accumulator.oldMessages.map((message) =>
+        message.id === payload.id ? { ...message, ...payload } : message,
+      ),
     };
   }
 
