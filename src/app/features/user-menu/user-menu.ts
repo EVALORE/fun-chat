@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TuiAvatar } from '@taiga-ui/kit';
-import { UserStore } from '../../core/user-store';
+import { UserStore } from '../../core/stores/user-store';
 import { TuiButton } from '@taiga-ui/core';
 import { Auth } from '../../core/auth';
 

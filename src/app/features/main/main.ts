@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { UserList } from './user-list/user-list';
 import { ChatDialog } from './chat-dialog/chat-dialog';
 import { TuiIcon } from '@taiga-ui/core';
-import { ReceiverStore } from '../../core/receiver-store';
+import { ReceiverStore } from '../../core/stores/receiver-store';
 
 @Component({
   selector: 'app-main',

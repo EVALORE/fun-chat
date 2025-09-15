@@ -4,12 +4,12 @@ import { combineLatest, map, startWith } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 import { TuiButton, TuiTextfield } from '@taiga-ui/core';
 import { TuiCell, TuiSearch } from '@taiga-ui/layout';
-import { UserStore } from '../../../core/user-store';
+import { UserStore } from '../../../core/stores/user-store';
 import { TuiStatus } from '@taiga-ui/kit';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { User } from '../../../core/user';
-import { ReceiverStore } from '../../../core/receiver-store';
+import { ReceiverStore } from '../../../core/stores/receiver-store';
 
 @Component({
   selector: 'app-user-list',

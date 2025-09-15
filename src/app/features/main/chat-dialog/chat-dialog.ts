@@ -13,7 +13,7 @@ import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MessagesHandler } from './messages-handler';
 import { MessageList } from './message-list/message-list';
-import { ReceiverStore } from '../../../core/receiver-store';
+import { ReceiverStore } from '../../../core/stores/receiver-store';
 
 @Component({
   selector: 'app-user-dialog',

@@ -2,7 +2,7 @@ import { inject, Injectable, untracked } from '@angular/core';
 import { WebSocketClient } from './api/web-socket-client';
 import { RouterHandler } from './routing/router-handler';
 import { first } from 'rxjs';
-import { UserStore } from './user-store';
+import { UserStore } from './stores/user-store';
 
 @Injectable({
   providedIn: 'root',

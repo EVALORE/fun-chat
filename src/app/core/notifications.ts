@@ -1,4 +1,4 @@
-import { DestroyRef, inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { WebSocketClient } from './api/web-socket-client';
 import { TuiAlertService } from '@taiga-ui/core';
 import { Observable, switchMap } from 'rxjs';
@@ -9,7 +9,6 @@ import { Observable, switchMap } from 'rxjs';
 export class Notifications {
   private readonly ws = inject(WebSocketClient);
   private readonly alert = inject(TuiAlertService);
-  private readonly destroyRef = inject(DestroyRef);
 
   constructor() {
     this.ws
