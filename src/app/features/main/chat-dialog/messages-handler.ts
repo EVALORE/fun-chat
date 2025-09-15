@@ -1,10 +1,10 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { WebSocketClient } from '../../../core/api/web-socket-client';
-import { filter, map, merge, Observable, scan, shareReplay, startWith, Subject, switchMap, tap, } from 'rxjs';
-import { Message } from '../../../core/message';
-import { User } from '../../../core/user';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { ChatApiResponse } from '../../../core/api/types/response';
+import {inject, Injectable} from '@angular/core';
+import {WebSocketClient} from '../../../core/api/web-socket-client';
+import {filter, map, merge, Observable, scan, shareReplay, startWith, Subject, switchMap, tap,} from 'rxjs';
+import {Message} from '../../../core/message';
+
+import {toObservable} from '@angular/core/rxjs-interop';
+import {ChatApiResponse} from '../../../core/api/types/response';
 import {
   MessageDeleteResponsePayload,
   MessageDeliverResponsePayload,
@@ -13,6 +13,7 @@ import {
   MessageReadResponsePayload,
   MessageSendResponsePayload,
 } from '../../../core/api/types/payloads';
+import {ReceiverStore} from '../../../core/receiver-store';
 
 type MessageType = 'MSG_SEND' | 'MSG_DELIVER' | 'MSG_READ' | 'MSG_EDIT' | 'MSG_DELETE';
 
@@ -38,25 +39,25 @@ type MessageHandlers = Record<
 @Injectable()
 export class MessagesHandler {
   private readonly ws = inject(WebSocketClient);
-  private currentReceiver = signal<User | null>(null);
+  private readonly receiver = inject(ReceiverStore);
 
   private readonly mergeNew$ = new Subject<void>();
 
   private readonly messageHandlers: MessageHandlers = {
     MSG_DELETE: (accumulator, payload) =>
-      this.deleteMessage(accumulator, payload as MessageDeleteResponsePayload),
+      this.onMessageDelete(accumulator, payload as MessageDeleteResponsePayload),
     MSG_DELIVER: (accumulator, payload) =>
-      this.deliverMessage(accumulator, payload as MessageDeliverResponsePayload),
+      this.onMessageDeliver(accumulator, payload as MessageDeliverResponsePayload),
     MSG_EDIT: (accumulator, payload) =>
-      this.editMessage(accumulator, payload as MessageEditResponsePayload),
+      this.onMessageEdit(accumulator, payload as MessageEditResponsePayload),
     MSG_READ: (accumulator, payload) =>
-      this.readMessage(accumulator, payload as MessageReadResponsePayload),
+      this.onMessageRead(accumulator, payload as MessageReadResponsePayload),
     MSG_SEND: (accumulator, payload, receiverLogin) =>
-      this.sendMessage(accumulator, payload as MessageSendResponsePayload, receiverLogin),
+      this.onMessageSend(accumulator, payload as MessageSendResponsePayload, receiverLogin),
   };
 
-  private messageState = toObservable(this.currentReceiver).pipe(
-    filter((receiver) => receiver !== null),
+  private messageState = toObservable(this.receiver.login).pipe(
+    filter(Boolean),
     switchMap((receiver) => this.getMessagesForReceiver(receiver)),
     shareReplay(1),
   );
@@ -66,13 +67,7 @@ export class MessagesHandler {
   public showDivider = this.messageState.pipe(map((state) => state.showDivider));
   public isEmpty$ = this.messageState.pipe(map((state) => state.isEmpty));
 
-  public setReceiver(receiver: User): void {
-    if (this.currentReceiver()?.login !== receiver.login) {
-      this.currentReceiver.set(receiver);
-    }
-  }
-
-  private deleteMessage(
+  private onMessageDelete(
     accumulator: DialogState,
     payload: MessageDeleteResponsePayload,
   ): DialogState {
@@ -82,7 +77,7 @@ export class MessagesHandler {
     };
   }
 
-  private deliverMessage(
+  private onMessageDeliver(
     accumulator: DialogState,
     payload: MessageDeliverResponsePayload,
   ): DialogState {
@@ -94,7 +89,10 @@ export class MessagesHandler {
     };
   }
 
-  private editMessage(accumulator: DialogState, payload: MessageEditResponsePayload): DialogState {
+  private onMessageEdit(
+    accumulator: DialogState,
+    payload: MessageEditResponsePayload,
+  ): DialogState {
     return {
       ...accumulator,
       oldMessages: accumulator.oldMessages.map((message) =>
@@ -106,7 +104,10 @@ export class MessagesHandler {
     };
   }
 
-  private readMessage(accumulator: DialogState, payload: MessageReadResponsePayload): DialogState {
+  private onMessageRead(
+    accumulator: DialogState,
+    payload: MessageReadResponsePayload,
+  ): DialogState {
     return {
       ...accumulator,
       newMessages: accumulator.newMessages.map((message) =>
@@ -118,12 +119,17 @@ export class MessagesHandler {
     };
   }
 
-  private sendMessage(
+  private onMessageSend(
     accumulator: DialogState,
     payload: MessageSendResponsePayload,
     receiverLogin: string,
   ): DialogState {
     const isFromReceiver = payload.from === receiverLogin;
+    const isToReceiver = payload.to === receiverLogin;
+
+    if (!isFromReceiver && !isToReceiver) {
+      return accumulator;
+    }
 
     if (isFromReceiver) {
       this.ws.send('MSG_READ', { id: payload.id });
@@ -161,18 +167,18 @@ export class MessagesHandler {
     };
   }
 
-  public getMessagesForReceiver(receiver: User): Observable<DialogState> {
-    this.ws.send('MSG_FROM_USER', { login: receiver.login });
+  public getMessagesForReceiver(login: string): Observable<DialogState> {
+    this.ws.send('MSG_FROM_USER', { login });
 
     const initial$ = this.ws
       .onType('MSG_FROM_USER')
       .pipe(map(({ payload }) => this.handleInitialMessages(payload)));
 
-    const reducers$ = merge(this.wsReducers(receiver), this.uiReducers());
+    const reducers$ = merge(this.wsReducers(login), this.uiReducers());
 
     return initial$.pipe(
       tap((state) => {
-        this.sendReadForNewMessages(state, receiver.login);
+        this.sendReadForNewMessages(state, login);
       }),
       switchMap((initialState) =>
         reducers$.pipe(
@@ -183,7 +189,7 @@ export class MessagesHandler {
     );
   }
 
-  private wsReducers(receiver: User): Observable<Reducer> {
+  private wsReducers(login: string): Observable<Reducer> {
     const updates$ = merge(
       this.ws.onType('MSG_SEND'),
       this.ws.onType('MSG_DELIVER'),
@@ -192,7 +198,7 @@ export class MessagesHandler {
       this.ws.onType('MSG_DELETE'),
     );
     return updates$.pipe(
-      map((response) => (state: DialogState) => this.processMessage(state, response, receiver)),
+      map((response) => (state: DialogState) => this.processMessage(state, response, login)),
     );
   }
 
@@ -203,13 +209,13 @@ export class MessagesHandler {
   private processMessage(
     accumulator: DialogState,
     response: ChatApiResponse,
-    receiver: User,
+    login: string,
   ): DialogState {
     const { type, payload } = response;
 
     if (type in this.messageHandlers) {
       const handler = this.messageHandlers[type as MessageType];
-      return handler(accumulator, payload, receiver.login);
+      return handler(accumulator, payload, login);
     }
 
     return accumulator;
@@ -232,6 +238,18 @@ export class MessagesHandler {
       showDivider: false,
       mergeNew: true,
     };
+  }
+
+  public sendMessage(text: string): void {
+    this.ws.send('MSG_SEND', { to: this.receiver.login(), text });
+  }
+
+  public editMessage(id: string, text: string): void {
+    this.ws.send('MSG_EDIT', { id, text });
+  }
+
+  public deleteMessage(id: string): void {
+    this.ws.send('MSG_DELETE', { id });
   }
 
   public mergeMessages(): void {

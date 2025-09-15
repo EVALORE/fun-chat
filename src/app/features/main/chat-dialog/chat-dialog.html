@@ -1,6 +1,6 @@
 <div class="top">
-  <span>{{ receiver().login }}</span>
-  @if (receiver().isOnline) {
+  <span>{{ receiverLogin() }}</span>
+  @if (receiverOnlineStatus()) {
     <tui-badge appearance="positive" tuiStatus>Online</tui-badge>
   } @else {
     <tui-badge appearance="neutral" tuiStatus>Offline</tui-badge>
@@ -21,7 +21,7 @@
 
     <app-message-list
       [messages]="oldList"
-      [receiverLogin]="receiver().login"
+      [receiverLogin]="receiverLogin()"
       [editingMessageId]="editingMessageId"
       (edit)="startEdit($event.id, $event.text)"
       (delete)="deleteMessage($event)"
@@ -35,7 +35,7 @@
 
     <app-message-list
       [messages]="newList"
-      [receiverLogin]="receiver().login"
+      [receiverLogin]="receiverLogin()"
       [editingMessageId]="editingMessageId"
       (edit)="startEdit($event.id, $event.text)"
       (delete)="deleteMessage($event)"

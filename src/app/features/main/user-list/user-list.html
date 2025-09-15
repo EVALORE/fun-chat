@@ -15,13 +15,13 @@
 </search>
 <div>
   @for (user of users | async; track $index) {
-  <div class="user" tuiCell="s">
-    <button tuiButton appearance="flat-grayscale" type="button" (click)="selectUser(user)">
-      <span>{{ user.login }}</span>
-      <span
-        [tuiStatus]="user.isOnline ? 'var(--tui-status-positive)' : 'var(--tui-status-neutral)'"
-      ></span>
-    </button>
-  </div>
+    <div class="user" tuiCell="s">
+      <button tuiButton appearance="flat-grayscale" type="button" (click)="setReceiver(user)">
+        <span>{{ user.login }}</span>
+        <span
+          [tuiStatus]="user.isOnline ? 'var(--tui-status-positive)' : 'var(--tui-status-neutral)'"
+        ></span>
+      </button>
+    </div>
   }
 </div>

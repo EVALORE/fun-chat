@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { UserList } from './user-list/user-list';
 import { ChatDialog } from './chat-dialog/chat-dialog';
-import { User } from '../../core/user';
 import { TuiIcon } from '@taiga-ui/core';
+import { ReceiverStore } from '../../core/receiver-store';
 
 @Component({
   selector: 'app-main',
@@ -12,5 +12,6 @@ import { TuiIcon } from '@taiga-ui/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Main {
-  public readonly receiver = signal<User | null>(null);
+  private readonly receiver = inject(ReceiverStore);
+  public readonly receiverLogin = this.receiver.login;
 }

@@ -10,9 +10,6 @@
   <header tuiHeader>
     <h2 tuiTitle>Authentication</h2>
   </header>
-  @if (loginResponse$ | async; as response) {
-  <tui-notification [appearance]="response.appearance">{{ response.message }}</tui-notification>
-  }
   <tui-textfield>
     <label for="name" tuiLabel>Name</label>
     <input id="name" tuiTextfield type="text" formControlName="login" placeholder="ex: john1999" />
@@ -35,6 +32,6 @@
   />
 
   <button tuiButton type="submit" [disabled]="authForm.invalid">
-    {{ isSubmitting() ? "Processing..." : "Submit" }}
+    {{ isSubmitting() ? 'Processing...' : 'Submit' }}
   </button>
 </form>

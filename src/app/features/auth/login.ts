@@ -1,21 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, signal, untracked } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import {
-  TuiAppearance,
-  TuiButton,
-  TuiError,
-  TuiNotification,
-  TuiTextfield,
-  TuiTitle,
-} from '@taiga-ui/core';
+import { TuiAppearance, TuiButton, TuiError, TuiTextfield, TuiTitle } from '@taiga-ui/core';
 import { TuiCard, TuiForm, TuiHeader } from '@taiga-ui/layout';
 import { TuiFieldErrorPipe } from '@taiga-ui/kit';
 import { AsyncPipe } from '@angular/common';
 import { AuthValidation } from './auth-validation';
 import { Errors } from '../../shared/ui/errors';
 import { Auth } from '../../core/auth';
-import { map, merge, tap } from 'rxjs';
+import { merge } from 'rxjs';
 import { WebSocketClient } from '../../core/api/web-socket-client';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-auth',
@@ -32,7 +26,6 @@ import { WebSocketClient } from '../../core/api/web-socket-client';
     TuiFieldErrorPipe,
     AsyncPipe,
     Errors,
-    TuiNotification,
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -50,29 +43,14 @@ export class Login {
 
   protected readonly isSubmitting = signal<boolean>(false);
 
-  protected readonly loginResponse$ = merge(
-    this.ws.connectionError$,
-    this.ws.onType('USER_LOGIN'),
-    this.ws.onType('ERROR'),
-  ).pipe(
-    map((response) =>
-      response.type === 'ERROR'
-        ? {
-            appearance: 'error',
-            message: response.payload.error,
-          }
-        : {
-            appearance: 'positive',
-            message: 'login successful proceeded',
-          },
-    ),
-    tap((response) => {
-      if (response.appearance === 'positive') {
+  protected readonly loginResponse$ = merge(this.ws.onType('USER_LOGIN'), this.ws.onType('ERROR'))
+    .pipe(takeUntilDestroyed())
+    .subscribe((response) => {
+      if (response.type === 'USER_LOGIN') {
         this.authForm.reset();
       }
       this.isSubmitting.set(false);
-    }),
-  );
+    });
 
   protected readonly authForm = this.fb.group({
     login: this.fb.control('', [

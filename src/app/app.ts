@@ -1,8 +1,9 @@
 import { TuiIcon, TuiRoot, TuiTitle } from '@taiga-ui/core';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TuiHeader } from '@taiga-ui/layout';
 import { RouterOutlet } from '@angular/router';
 import { UserMenu } from './features/user-menu/user-menu';
+import { Notifications } from './core/notifications';
 
 @Component({
   selector: 'app-root',
@@ -11,4 +12,6 @@ import { UserMenu } from './features/user-menu/user-menu';
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App {}
+export class App {
+  private readonly notifications = inject(Notifications);
+}

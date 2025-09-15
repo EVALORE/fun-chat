@@ -5,17 +5,15 @@ import {
   effect,
   ElementRef,
   inject,
-  input,
   ViewChild,
 } from '@angular/core';
-import { User } from '../../../core/user';
 import { TuiBadge, TuiStatus } from '@taiga-ui/kit';
 import { TuiIcon, TuiTextfield } from '@taiga-ui/core';
-import { WebSocketClient } from '../../../core/api/web-socket-client';
 import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MessagesHandler } from './messages-handler';
 import { MessageList } from './message-list/message-list';
+import { ReceiverStore } from '../../../core/receiver-store';
 
 @Component({
   selector: 'app-user-dialog',
@@ -29,9 +27,12 @@ export class ChatDialog implements AfterViewInit {
   @ViewChild('conversationContainer') private conversationContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('unreadDivider') private unreadDivider: ElementRef<HTMLInputElement> | undefined;
 
-  private readonly ws = inject(WebSocketClient);
   private readonly messagesHandler = inject(MessagesHandler);
-  public readonly receiver = input.required<User>();
+  private readonly receiver = inject(ReceiverStore);
+
+  public receiverLogin = this.receiver.login;
+  public receiverOnlineStatus = this.receiver.isOnline;
+
   public userInput = '';
   public originalMessageText = '';
   public editingMessageId: string | null = null;
@@ -42,10 +43,6 @@ export class ChatDialog implements AfterViewInit {
   public readonly isEmpty = this.messagesHandler.isEmpty$;
 
   constructor() {
-    effect(() => {
-      this.messagesHandler.setReceiver(this.receiver());
-    });
-
     effect(() => {
       const subscription = this.oldMessages.subscribe((messageList) => {
         if (messageList.length > 0) {
@@ -67,10 +64,10 @@ export class ChatDialog implements AfterViewInit {
     }
 
     if (this.editingMessageId) {
-      this.ws.send('MSG_EDIT', { id: this.editingMessageId, text: this.userInput });
+      this.messagesHandler.editMessage(this.editingMessageId, this.userInput);
       this.cancelEdit();
     } else {
-      this.ws.send('MSG_SEND', { to: this.receiver().login, text: this.userInput });
+      this.messagesHandler.sendMessage(this.userInput);
     }
 
     this.userInput = '';
@@ -99,7 +96,7 @@ export class ChatDialog implements AfterViewInit {
   }
 
   public deleteMessage(id: string): void {
-    this.ws.send('MSG_DELETE', { id });
+    this.messagesHandler.deleteMessage(id);
   }
 
   public startEdit(messageId: string, currentText: string): void {
