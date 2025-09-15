@@ -1,5 +1,5 @@
-import { User } from '../../user';
-import { Message } from '../../message';
+import { User } from '../../../shared/models/user';
+import { Message } from '../../../shared/models/message';
 
 export interface UserLoginPayload {
   login: string;

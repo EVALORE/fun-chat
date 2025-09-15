@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { Message } from '../../../../core/message';
+import { Message } from '../../../../shared/models/message';
 import { MessageItem } from '../message-item/message-item';
 
 @Component({

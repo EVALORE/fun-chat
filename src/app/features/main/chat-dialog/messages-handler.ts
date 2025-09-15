@@ -1,21 +1,10 @@
-import { inject, Injectable } from '@angular/core';
-import { WebSocketClient } from '../../../core/api/web-socket-client';
-import {
-  filter,
-  map,
-  merge,
-  Observable,
-  scan,
-  shareReplay,
-  startWith,
-  Subject,
-  switchMap,
-  tap,
-} from 'rxjs';
-import { Message } from '../../../core/message';
+import {inject, Injectable} from '@angular/core';
+import {WebSocketClient} from '../../../core/api/web-socket-client';
+import {filter, map, merge, Observable, scan, shareReplay, startWith, Subject, switchMap, tap,} from 'rxjs';
+import {Message} from '../../../shared/models/message';
 
-import { toObservable } from '@angular/core/rxjs-interop';
-import { ChatApiResponse } from '../../../core/api/types/response';
+import {toObservable} from '@angular/core/rxjs-interop';
+import {ChatApiResponse} from '../../../core/api/types/response';
 import {
   MessageDeleteResponsePayload,
   MessageDeliverResponsePayload,
@@ -24,7 +13,7 @@ import {
   MessageReadResponsePayload,
   MessageSendResponsePayload,
 } from '../../../core/api/types/payloads';
-import { ReceiverStore } from '../../../core/stores/receiver-store';
+import {ReceiverStore} from '../../../core/stores/receiver-store';
 
 type MessageType = 'MSG_SEND' | 'MSG_DELIVER' | 'MSG_READ' | 'MSG_EDIT' | 'MSG_DELETE';
 
