@@ -18,6 +18,6 @@ export class MessageList {
   public delete = output<string>();
 
   public isOwn(message: Message): boolean {
-    return message.from === this.receiverLogin();
+    return message.from !== this.receiverLogin();
   }
 }

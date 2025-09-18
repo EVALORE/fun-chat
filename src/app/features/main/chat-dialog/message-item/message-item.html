@@ -14,12 +14,12 @@
       />
     </div>
 
-    <div>
+    <div class="message">
       <div [appearance]="appearance" tuiMessage [class.editing]="editing()">
         {{ message().text }}
       </div>
       @if (isOwn()) {
-        <div>
+        <div class="message-actions">
           <tui-icon icon="@tui.pen" (click)="onEdit()" title="Edit message" />
           <tui-icon icon="@tui.trash" (click)="onDelete()" title="Delete message" />
         </div>

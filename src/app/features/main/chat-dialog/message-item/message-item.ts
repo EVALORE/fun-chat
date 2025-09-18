@@ -21,7 +21,7 @@ export class MessageItem {
   public readonly delete = output<string>();
 
   public get appearance(): 'accent' | 'neutral' {
-    return this.isOwn() ? 'neutral' : 'accent';
+    return this.isOwn() ? 'accent' : 'neutral';
   }
 
   public get statusIcon(): string {

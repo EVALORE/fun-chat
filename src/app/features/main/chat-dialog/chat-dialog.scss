@@ -33,3 +33,19 @@
   overscroll-behavior: contain;
 }
 
+.placeholder-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.placeholder-content {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.placeholder-icon {
+  display: block;
+}
