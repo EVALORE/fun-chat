@@ -1,5 +1,5 @@
 export abstract class StorageService<T extends object> {
-  constructor(
+  protected constructor(
     private readonly storage: Storage,
     private readonly prefix?: string,
   ) {}
